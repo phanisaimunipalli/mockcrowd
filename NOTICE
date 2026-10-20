@@ -1,0 +1,11 @@
+mockcrowd
+Copyright 2026 Phani Sai Munipalli
+
+This product includes a reimplementation of the social simulation design of
+OASIS (Open Agent Social Interaction Simulations) by CAMEL-AI.org,
+https://github.com/camel-ai/oasis, licensed under the Apache License 2.0.
+No OASIS source code is included.
+
+The overall approach (seed material, generated personas, multi-agent social
+simulation, report) was inspired by MiroFish, https://github.com/666ghj/MiroFish.
+No MiroFish source code is included.
