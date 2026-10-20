@@ -122,6 +122,7 @@ def validate(idea: str, brain: Brain, cfg: Config, out_dir: Path | None = None, 
     if save:
         path = store.save_run(run, R.render_markdown(run), out_dir)
         run["path"] = str(path)
-        cost = f", reported cost ${brain.cost_usd:.2f}" if brain.cost_usd else ""
+        cost = (f", ${brain.cost_usd:.2f} at list price (on a subscription plan this uses your usage "
+                f"limits, it is not billed)") if brain.cost_usd else ""
         log(f"done in {rep['seconds']}s with {brain.calls} LLM calls{cost}. Report: {path / 'report.md'}")
     return run
