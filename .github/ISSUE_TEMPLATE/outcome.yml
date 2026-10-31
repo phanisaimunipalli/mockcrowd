@@ -1,0 +1,36 @@
+name: Share a real outcome
+description: You ran mockcrowd, then tested or launched for real. Tell us what happened so the backtest gets better.
+labels: [outcome]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea (anonymize anything you like)
+    validations:
+      required: true
+  - type: input
+    id: verdict
+    attributes:
+      label: mockcrowd verdict and would pay share
+      placeholder: "Some demand, 18% would pay, lift +12%"
+    validations:
+      required: true
+  - type: dropdown
+    id: demand
+    attributes:
+      label: Real demand you saw
+      options: [high, medium, low]
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: What happened in the real world
+      description: Waitlist signups, preorders, conversion, revenue, or why you stopped.
+    validations:
+      required: true
+  - type: input
+    id: brain
+    attributes:
+      label: Brain and model
+      placeholder: "claude, codex, ollama qwen2.5:14b, ..."

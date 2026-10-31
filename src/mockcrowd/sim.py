@@ -286,9 +286,13 @@ FEED (hot first, [id] u/handle (score)):
 PEOPLE:
 {people}
 
+People act in the order listed, so a person may also reply to or vote on a comment written
+earlier in this same step: use that writer's person id as the target.
+
 Return JSON: {{"actions": [{{"id": "person id", "action": "comment|reply|upvote|downvote|nothing",
-  "target": "comment id for reply/upvote/downvote, else null", "text": "comment text or empty"}}]}}
-One action for every person."""
+  "target": "comment id (or earlier writer's person id) for reply/upvote/downvote, else null",
+  "text": "comment text or empty"}}]}}
+One action for every person, in the order listed."""
 
     def mock() -> dict[str, Any]:
         rng = random.Random(seed_from(seed, thread.id, rnd, "mock"))
@@ -300,10 +304,13 @@ One action for every person."""
                     "skeptical": "What does this do that a spreadsheet can't?",
                     "negative": "Another subscription? Pass."}[p.stance]
             out.append({"id": p.id, "action": action, "target": rng.choice(ids) if ids else None, "text": text})
+            if action == "comment":
+                ids.append(p.id)
         return {"actions": out}
 
     reply = brain.run(Task("thread", prompt, mock, validate=lambda v: isinstance(v, dict) and isinstance(v.get("actions"), list)))
     existing = {c.id: c for c in thread.comments}
+    written_now: dict[str, Comment] = {}  # person id -> comment they wrote earlier in this step
     member_ids = set(thread.members)
     counter = len(thread.comments)
     for act in reply["actions"]:
@@ -311,10 +318,14 @@ One action for every person."""
             continue
         kind, target, text = act.get("action"), act.get("target"), str(act.get("text") or "").strip()
         author = personas[act["id"]]
+        if target in written_now:
+            target = written_now[target].id
         if kind in ("comment", "reply") and text:
             counter += 1
             parent = target if kind == "reply" and target in existing else None
-            thread.comments.append(Comment(f"{thread.id}c{counter}", author.id, author.handle, text[:600], parent, rnd))
+            comment = Comment(f"{thread.id}c{counter}", author.id, author.handle, text[:600], parent, rnd)
+            thread.comments.append(comment)
+            existing[comment.id] = written_now[author.id] = comment
         elif kind in ("upvote", "downvote") and target in existing and existing[target].author != author.id:
             if kind == "upvote":
                 existing[target].up += 1

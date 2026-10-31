@@ -65,9 +65,10 @@ class CodexCLI(Brain):
     def complete(self, prompt: str) -> str:
         with tempfile.TemporaryDirectory() as tmp:
             out_file = os.path.join(tmp, "last.txt")
-            cmd = [self.binary, "exec", "--skip-git-repo-check", "--ephemeral", "-o", out_file]
+            # read-only sandbox: the crowd only needs text back, never shell access
+            cmd = [self.binary, "exec", "--skip-git-repo-check", "--ephemeral", "-s", "read-only", "-o", out_file]
             if self.model:
-                cmd += ["-c", f'model="{self.model}"']
+                cmd += ["-m", self.model]
             cmd.append("-")
             _run(cmd, f"{SYSTEM_PROMPT}\n\n{prompt}", self.timeout)
             try:
@@ -78,13 +79,16 @@ class CodexCLI(Brain):
 
 
 class CodePuppyCLI(Brain):
-    """Code Puppy single-prompt mode: `code-puppy -p PROMPT`."""
+    """Code Puppy single-prompt mode: `code-puppy -p PROMPT --no-tools`."""
 
     name = "code-puppy"
     binary = "code-puppy"
 
     def complete(self, prompt: str) -> str:
-        return _run([self.binary, "-p", f"{SYSTEM_PROMPT}\n\n{prompt}"], None, self.timeout)
+        cmd = [self.binary, "--no-tools", "--disable-ask-user-question"]
+        if self.model:
+            cmd += ["--model", self.model]
+        return _run(cmd + ["-p", f"{SYSTEM_PROMPT}\n\n{prompt}"], None, self.timeout)
 
 
 CLI_BRAINS: dict[str, type[Brain]] = {

@@ -8,7 +8,7 @@ from importlib import resources
 from typing import Any
 
 from .. import __version__, store
-from ..brains import Brain
+from ..brains import Brain, BrainError
 from ..pipeline import DEFAULT_SOURCES, Config, validate
 from ..util import log
 from . import metrics as M
@@ -48,13 +48,18 @@ def backtest(brain: Brain, agents: int = 40, threshold: float = 0.10, live_sourc
         log(f"backtest {i}/{len(cases)}: {case['id']} (truth: {case['demand']})")
         cfg = Config(agents=agents, rounds=1, audience=case.get("audience"), seed=i,
                      sources=list(DEFAULT_SOURCES) if live_sources else [])
-        run = validate(case["pitch"], brain, cfg, save=False)
+        try:
+            run = validate(case["pitch"], brain, cfg, save=False)
+        except BrainError as exc:  # one bad case should not sink a long backtest
+            log(f"  skipped {case['id']}: {exc}")
+            rows.append({"id": case["id"], "truth": case["demand"], "error": str(exc)[:300]})
+            continue
         score = run["report"]["demand_score"]
         rows.append({"id": case["id"], "truth": case["demand"], "score": score,
                      "predicted": "high" if score >= threshold else "low"})
-    graded = [r for r in rows if r["truth"] in ("high", "low")]
+    graded = [r for r in rows if r["truth"] in ("high", "low") and "score" in r]
     accuracy = round(sum(r["predicted"] == r["truth"] for r in graded) / len(graded), 3) if graded else None
-    return {"cases": rows, "accuracy": accuracy, "auc": auc([(r["score"], r["truth"]) for r in rows]),
+    return {"cases": rows, "accuracy": accuracy, "auc": auc([(r["score"], r["truth"]) for r in rows if "score" in r]),
             "leakage": M.leakage(brain, cases), "threshold": threshold}
 
 

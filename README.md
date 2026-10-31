@@ -1,4 +1,6 @@
-# mockcrowd
+<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/hero.svg" alt="mockcrowd: validate product demand before you build" width="100%"></p>
+
+[![ci](https://github.com/phanisaimunipalli/mockcrowd/actions/workflows/ci.yml/badge.svg)](https://github.com/phanisaimunipalli/mockcrowd/actions/workflows/ci.yml) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-Apache%202.0-green)
 
 **Validate product demand before you build.** mockcrowd builds a crowd of hundreds of AI personas from real posts on Reddit, Hacker News and Bluesky, lets them argue about your idea in a simulated Reddit thread, and tells you how many would really pay, why the rest would not, and how far to trust the answer.
 
@@ -10,27 +12,7 @@ mockcrowd validate "An app that scans your vinyl records with the phone camera t
 
 Real output from a small test run (20 personas, 1 discussion round, Claude, Hacker News and Bluesky voices):
 
-```
-# mockcrowd verdict: Weak demand: most of the crowd would not pay
-
-| Measure        | Blind (alone)    | After discussion |
-|----------------|------------------|------------------|
-| Would pay      | 15% (5% to 36%)  | 0% (0% to 16%)   |
-| Would try free | 45%              | 45%              |
-
-Control check: a bland same-category pitch got 0% would pay. Lift of the real idea: +15%.
-
-Top objections
-| Don't care about value; turns the hobby into a portfolio | 30% |
-| Discogs/CLZ already do this, won't switch                | 20% |
-| Doubts about pressing-ID and pricing accuracy            | 15% |
-
-Loudest comments
-u/bearsdown_wax_dad: The Discogs app already scans barcodes and it's free. My kids did
-  about 300 of mine in an afternoon while I watched the Bears lose. What does this do that it doesn't?
-u/deadwax_decoder: You can't identify the exact pressing from the cover or the label. The
-  pressing is in the dead wax: matrix numbers, plant marks, mastering engineer initials.
-```
+<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/sample-report.svg" alt="mockcrowd report: weak demand, 15% would pay alone, 0% after discussion, top objections and loudest comments" width="100%"></p>
 
 Interest was real (45% would try it free), but the discussion talked everyone out of paying. That is the kind of answer you want before you spend a month building.
 
@@ -64,6 +46,8 @@ mockcrowd uses the first one it finds, or the one you pass with `--brain`.
 | `code-puppy` | `code-puppy -p` with your configured model | Code Puppy installed |
 | `ollama` | Local models, free and private, slower | `ollama serve`, then `--model <name>` |
 | `openai` | Any OpenAI compatible endpoint (OpenAI, OpenRouter, LM Studio, vLLM) | `MOCKCROWD_API_BASE`, `MOCKCROWD_API_KEY`, `--model` |
+
+Claude has been run live end to end. The Codex, Code Puppy, Ollama and OpenAI adapters are tested against the flags and API each tool documents, but not yet in a live run; reports are welcome. Codex runs in its read only sandbox and Code Puppy with tools off, so the crowd can never touch your files.
 
 `--model` is passed through exactly as you write it. A 500 persona run makes roughly 100 to 150 LLM calls, because one call steps a whole batch or thread of personas. A faster, cheaper model makes runs quicker.
 
@@ -105,6 +89,8 @@ mockcrowd eval --suite quick|full|backtest [--gate]
 Runs are saved in `~/.mockcrowd/runs/<run-id>/` as `report.md` and `run.json` (every voice, persona, vote and comment).
 
 ## How a run works
+
+<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/how-it-works.svg" alt="Plan, collect, label, design, blind vote, discuss, report" width="100%"></p>
 
 1. **Plan.** The brain reads your idea and lists the segments (including people who would not buy), subreddits and search queries.
 2. **Collect.** Real posts from the sources above.

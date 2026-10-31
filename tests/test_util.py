@@ -51,3 +51,23 @@ def test_question_parsing_and_normalizing():
 
 def test_strip_html():
     assert strip_html("<p>Hi &amp; <i>bye</i>") == "Hi & bye"
+
+
+def test_votes_land_on_comments_written_in_the_same_step():
+    from mockcrowd.brains.mock import MockBrain
+    from mockcrowd.personas import Persona
+    from mockcrowd.sim import Thread, step_thread
+
+    class Scripted(MockBrain):
+        def run(self, task):
+            return {"actions": [
+                {"id": "p1", "action": "comment", "target": None, "text": "Spreadsheet works fine."},
+                {"id": "p2", "action": "upvote", "target": "p1", "text": ""},
+                {"id": "p3", "action": "reply", "target": "p1", "text": "Agreed."},
+            ]}
+
+    people = {f"p{i}": Persona(id=f"p{i}", handle=f"u{i}", segment="s", bio="b", stance="neutral") for i in (1, 2, 3)}
+    thread = Thread("t01", "r/x", "title", "idea", list(people))
+    step_thread(Scripted(), thread, people, rnd=1)
+    first, reply = thread.comments
+    assert first.score == 1 and reply.parent == first.id

@@ -1,0 +1,22 @@
+name: Bug report
+description: Something broke or looks wrong.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command and output
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: mockcrowd version, brain, OS, Python
+      placeholder: "0.1.1, claude, macOS 15, Python 3.12"
