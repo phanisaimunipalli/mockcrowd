@@ -12,9 +12,9 @@ mockcrowd validate "An app that scans your vinyl records with the phone camera t
 
 Real output from a small test run (20 personas, 1 discussion round, Claude, Hacker News and Bluesky voices):
 
-<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/sample-report.svg" alt="mockcrowd report: weak demand, 15% would pay alone, 0% after discussion, top objections and loudest comments" width="100%"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/discussion.png" alt="mockcrowd discussion: personas debate a vinyl scanning app in a simulated r/vinyl thread; would try free falls from 60% to 35%, would pay from 5% to 0%, with the top objections" width="100%"></p>
 
-Interest was real (45% would try it free), but the discussion talked everyone out of paying. That is the kind of answer you want before you spend a month building.
+Alone, 60% said they would try it free and 5% would pay. After the discussion, 35% would try it and nobody would pay. That is the kind of answer you want before you spend a month building.
 
 ## Why it is different
 
