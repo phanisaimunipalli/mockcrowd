@@ -8,3 +8,4 @@ build/
 .mockcrowd/
 voices.jsonl
 .env
+docs/discussion.html
