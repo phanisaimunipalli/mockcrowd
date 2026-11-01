@@ -65,7 +65,7 @@ class CodexCLI(Brain):
     def complete(self, prompt: str) -> str:
         with tempfile.TemporaryDirectory() as tmp:
             out_file = os.path.join(tmp, "last.txt")
-            # read-only sandbox: the crowd only needs text back, never shell access
+            # read-only sandbox: blocks writes, not reads, so the system prompt forbids file access too
             cmd = [self.binary, "exec", "--skip-git-repo-check", "--ephemeral", "-s", "read-only", "-o", out_file]
             if self.model:
                 cmd += ["-m", self.model]

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import asdict, dataclass, field
 from typing import Any
+
+from ..util import strip_control
 
 
 @dataclass
@@ -30,8 +33,14 @@ MAX_CHARS = 1200
 
 
 def clean_text(text: str) -> str:
-    text = " ".join((text or "").split())
+    text = " ".join(strip_control(text or "").split())
     return text[:MAX_CHARS]
+
+
+def fenced(voice: Voice, limit: int) -> str:
+    """One post for a prompt, fenced so a stranger's text cannot pose as our instructions."""
+    text = re.sub(r"(?i)</post", r"<\\/post", voice.text[:limit])
+    return f"[{voice.id}] ({voice.community}) <post>{text}</post>"
 
 
 def dedupe(voices: list[Voice]) -> list[Voice]:

@@ -10,7 +10,7 @@ from typing import Any
 from .brains import Brain, Task
 from .personas import Persona
 from .sim import Question
-from .util import seed_from
+from .util import seed_from, strip_control
 
 # ---------------------------------------------------------------- statistics
 
@@ -224,4 +224,4 @@ def render_markdown(run: dict[str, Any]) -> str:
     ]
     if r.get("source_errors"):
         lines += ["", "## Source errors", ""] + [f"- {e}" for e in r["source_errors"][:10]]
-    return "\n".join(lines) + "\n"
+    return strip_control("\n".join(lines)) + "\n"

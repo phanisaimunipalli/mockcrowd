@@ -79,3 +79,10 @@ def test_openai_compatible_and_ollama(monkeypatch):
         assert Ollama(model="qwen").run(task()) == REPLY and seen["body"]["model"] == "qwen"
     finally:
         server.shutdown()
+
+
+def test_openai_key_only_goes_to_openai(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-private")
+    monkeypatch.delenv("MOCKCROWD_API_KEY", raising=False)
+    assert OpenAICompatible(model="m", base_url="https://api.openai.com/v1").api_key == "sk-private"
+    assert OpenAICompatible(model="m", base_url="https://openrouter.ai/api/v1").api_key is None

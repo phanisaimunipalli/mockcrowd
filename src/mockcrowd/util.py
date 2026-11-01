@@ -20,6 +20,7 @@ R = TypeVar("R")
 
 USER_AGENT = "mockcrowd/0.1 (+https://github.com/phanisaimunipalli/mockcrowd)"
 _quiet = False
+_CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]")
 
 
 def ssl_context() -> ssl.SSLContext:
@@ -32,8 +33,20 @@ def ssl_context() -> ssl.SSLContext:
         return ssl.create_default_context()
 
 
+class SameOriginAuthRedirect(urllib.request.HTTPRedirectHandler):
+    """urllib keeps Authorization across redirects; drop it when the origin changes."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        new = super().redirect_request(req, fp, code, msg, headers, newurl)
+        before, after = urllib.parse.urlsplit(req.full_url), urllib.parse.urlsplit(newurl)
+        if new and (before.scheme, before.netloc) != (after.scheme, after.netloc):
+            new.remove_header("Authorization")
+        return new
+
+
 def urlopen(req: urllib.request.Request | str, timeout: float):
-    return urllib.request.urlopen(req, timeout=timeout, context=ssl_context())
+    opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ssl_context()), SameOriginAuthRedirect())
+    return opener.open(req, timeout=timeout)
 
 
 def set_quiet(value: bool) -> None:
@@ -47,8 +60,11 @@ def log(msg: str) -> None:
 
 
 def home() -> Path:
-    path = Path(os.environ.get("MOCKCROWD_HOME", Path.home() / ".mockcrowd"))
-    path.mkdir(parents=True, exist_ok=True)
+    custom = os.environ.get("MOCKCROWD_HOME")
+    path = Path(custom or Path.home() / ".mockcrowd")
+    path.mkdir(mode=0o700, parents=True, exist_ok=True)  # runs hold unannounced ideas
+    if not custom:
+        path.chmod(0o700)
     return path
 
 
@@ -138,6 +154,11 @@ def http_json(
             if attempt < retries:
                 time.sleep(1.5 * (attempt + 1))
     raise RuntimeError(f"request failed: {url}: {last}")
+
+
+def strip_control(text: str) -> str:
+    """Remove control characters, so scraped or generated text cannot drive the terminal."""
+    return _CONTROL.sub("", text)
 
 
 def strip_html(text: str) -> str:

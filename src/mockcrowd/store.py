@@ -23,8 +23,9 @@ def new_run_id(idea: str) -> str:
 def save_run(run: dict[str, Any], markdown: str, out_dir: Path | None = None) -> Path:
     path = out_dir or runs_dir() / run["id"]
     path.mkdir(parents=True, exist_ok=True)
-    (path / "run.json").write_text(json.dumps(run, indent=2, ensure_ascii=False), encoding="utf-8")
-    (path / "report.md").write_text(markdown, encoding="utf-8")
+    for name, text in (("run.json", json.dumps(run, indent=2, ensure_ascii=False)), ("report.md", markdown)):
+        (path / name).write_text(text, encoding="utf-8")
+        (path / name).chmod(0o600)
     return path
 
 

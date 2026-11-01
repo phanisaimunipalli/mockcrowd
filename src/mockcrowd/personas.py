@@ -9,7 +9,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from .brains import Brain, Task
-from .sources import Voice, appstore, bluesky, dedupe, hn, reddit
+from .sources import Voice, appstore, bluesky, dedupe, fenced, hn, reddit
 from .util import chunks, log, parallel_map, seed_from
 
 STANCES = ["positive", "neutral", "skeptical", "negative"]
@@ -143,7 +143,7 @@ def label_voices(brain: Brain, idea: str, plan: dict[str, Any], voices: list[Voi
     segments = [s["name"] for s in plan["segments"]]
 
     def label_batch(batch: list[Voice]) -> list[dict[str, Any]]:
-        listing = "\n".join(f"[{v.id}] ({v.community}) {v.text[:500]}" for v in batch)
+        listing = "\n".join(fenced(v, 500) for v in batch)
         prompt = f"""Label real online posts for a demand study of this idea.
 
 IDEA: {idea}
@@ -259,7 +259,7 @@ def design_personas(
 
     def design(job: tuple[str, str, list[str], list[Voice], int]) -> list[dict[str, Any]]:
         seg, desc, stances, sample, bi = job
-        evidence = "\n".join(f"[{v.id}] ({v.community}) {v.text[:400]}" for v in sample) or "(no real posts available)"
+        evidence = "\n".join(fenced(v, 400) for v in sample) or "(no real posts available)"
         stance_need = ", ".join(f"{c} {st}" for st, c in Counter(stances).items())
         prompt = f"""Design {len(stances)} distinct, realistic people from the segment "{seg}" ({desc}).
 They will later react to this product idea, but design them WITHOUT reference to the idea's merits.

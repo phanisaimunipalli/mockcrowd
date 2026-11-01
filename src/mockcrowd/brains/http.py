@@ -6,11 +6,13 @@ import json
 import os
 import urllib.error
 import urllib.request
+from urllib.parse import urlsplit
 
 from ..util import urlopen
 from .base import SYSTEM_PROMPT, Brain, BrainError
 
 OLLAMA_BASE = "http://localhost:11434/v1"
+OPENAI_HOST = "api.openai.com"
 
 
 class OpenAICompatible(Brain):
@@ -25,7 +27,9 @@ class OpenAICompatible(Brain):
     ):
         super().__init__(model=model or os.environ.get("MOCKCROWD_MODEL"), timeout=timeout)
         self.base_url = (base_url or os.environ.get("MOCKCROWD_API_BASE") or "").rstrip("/")
-        self.api_key = api_key or os.environ.get("MOCKCROWD_API_KEY") or os.environ.get("OPENAI_API_KEY")
+        self.api_key = api_key or os.environ.get("MOCKCROWD_API_KEY")
+        if not self.api_key and urlsplit(self.base_url).hostname == OPENAI_HOST:
+            self.api_key = os.environ.get("OPENAI_API_KEY")  # never send this key to another provider
         if not self.base_url:
             raise BrainError("set MOCKCROWD_API_BASE (for example https://api.openai.com/v1)")
         if not self.model:
