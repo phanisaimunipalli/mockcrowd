@@ -25,7 +25,7 @@ def _brain_args(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="mockcrowd", description="Validate product demand before you build.")
+    parser = argparse.ArgumentParser(prog="mockcrowd", description="Validate your product idea before you build.")
     parser.add_argument("--version", action="version", version=f"mockcrowd {__version__}")
     parser.add_argument("-q", "--quiet", action="store_true", help="no progress output")
     sub = parser.add_subparsers(dest="command", required=True)
