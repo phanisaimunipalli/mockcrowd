@@ -14,6 +14,8 @@ Real output from a small test run (20 personas, 1 discussion round, Claude, Hack
 
 <p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/discussion.png" alt="mockcrowd discussion: personas debate a vinyl scanning app in a simulated r/vinyl thread; would try free falls from 60% to 35%, would pay from 5% to 0%, with the top objections" width="100%"></p>
 
+<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/demo.gif" alt="Terminal recording of a real 20 persona mockcrowd run, sped up 9x, ending in a weak demand verdict" width="100%"></p>
+
 Alone, 60% said they would try it free and 5% would pay. After the discussion, 35% would try it and nobody would pay. That is the kind of answer you want before you spend a month building.
 
 ## Why it is different
