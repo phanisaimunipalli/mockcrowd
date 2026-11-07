@@ -2,6 +2,8 @@
 
 [![ci](https://github.com/phanisaimunipalli/mockcrowd/actions/workflows/ci.yml/badge.svg)](https://github.com/phanisaimunipalli/mockcrowd/actions/workflows/ci.yml) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-Apache%202.0-green)
 
+<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/debate.gif" alt="Replay of a real mockcrowd run: persona characters debate a vinyl scanning app in a chat, votes flip from Try free to Pass, ending in a weak demand verdict" width="100%"></p>
+
 **Validate your product idea before you build.** mockcrowd builds a crowd of hundreds of AI personas from real posts on Reddit, Hacker News and Bluesky, lets them argue about your idea in a simulated Reddit thread, and tells you how many would really pay, why the rest would not, and how far to trust the answer.
 
 It runs on your machine, on the AI you already have: Claude Code, Codex, Code Puppy, Ollama, or any OpenAI compatible API.
