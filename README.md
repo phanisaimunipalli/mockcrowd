@@ -76,6 +76,29 @@ mockcrowd install-skill --dir <skills dir> # any agent that reads SKILL.md files
 
 Then ask: *"validate my idea for a vinyl collection app at \$3.99 a month"*. The agent runs mockcrowd, and when a source is blocked it can gather posts with its own web tools and pass them in.
 
+## Use it from any AI agent (MCP)
+
+```bash
+pip install "mockcrowd[mcp]"
+claude mcp add mockcrowd -- mockcrowd mcp   # Claude Code
+```
+
+Any other MCP client (Cursor, Codex, Claude Desktop, your own agent) can start it with the command `mockcrowd mcp` over stdio:
+
+```json
+{"mcpServers": {"mockcrowd": {"command": "mockcrowd", "args": ["mcp"]}}}
+```
+
+| Tool | What it does |
+|---|---|
+| `validate_idea` | Runs a crowd on an idea and returns the verdict, would pay and try free shares, lift, confidence, top objections and the full report |
+| `get_report` | The report of a past run |
+| `list_runs` | Past runs with their verdicts |
+| `record_outcome` | What really happened after a run, which becomes a backtest case |
+| `list_brains` | Which AI backends are available |
+
+Agent runs default to 60 personas and 1 round to keep them quick.
+
 ## Commands
 
 ```bash

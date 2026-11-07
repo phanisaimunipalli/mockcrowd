@@ -78,6 +78,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("brains", help="show which brains are available")
 
+    sub.add_parser("mcp", help="run the MCP server over stdio, so any AI agent can use mockcrowd")
+
     s = sub.add_parser("install-skill", help="install the agent skill so you can ask your coding agent")
     s.add_argument("--dir", help="skills directory (default ~/.claude/skills)")
     return parser
@@ -174,9 +176,20 @@ def cmd_install_skill(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_mcp(_: argparse.Namespace) -> int:
+    try:
+        from .mcp_server import main as serve
+    except ImportError:
+        print('mockcrowd: the MCP server needs an extra: pip install "mockcrowd[mcp]"', file=sys.stderr)
+        return 2
+    serve()
+    return 0
+
+
 COMMANDS = {
     "validate": cmd_validate, "collect": cmd_collect, "report": cmd_report, "runs": cmd_runs,
     "outcome": cmd_outcome, "eval": cmd_eval, "brains": cmd_brains, "install-skill": cmd_install_skill,
+    "mcp": cmd_mcp,
 }
 
 
