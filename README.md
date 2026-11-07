@@ -30,8 +30,8 @@ Alone, 60% said they would try it free and 5% would pay. After the discussion, 3
 ## Install
 
 ```bash
-uv tool install git+https://github.com/phanisaimunipalli/mockcrowd
-# or: pipx install git+https://github.com/phanisaimunipalli/mockcrowd
+pip install mockcrowd
+# or: uv tool install mockcrowd
 mockcrowd brains        # shows which AI it can use
 ```
 

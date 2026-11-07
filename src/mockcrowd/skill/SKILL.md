@@ -16,7 +16,7 @@ a blind vote against a bland control pitch, a Reddit-style discussion, then a fi
 ## Steps
 
 1. Check it is installed: `mockcrowd --version`. If not:
-   `uv tool install git+https://github.com/phanisaimunipalli/mockcrowd`
+   `pip install mockcrowd`
 2. Write the pitch the way a founder would post it: what it does, for whom, and the price.
    Ask the user for the price and audience if they did not give them. Do not invent them.
 3. Run:
