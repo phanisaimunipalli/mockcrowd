@@ -39,6 +39,8 @@ mockcrowd brains        # shows which AI it can use
 
 Python 3.10 or newer. One small dependency (`certifi`).
 
+Once a day mockcrowd checks PyPI and prints one line when a newer version is out. It never installs anything. Upgrade with `pip install -U mockcrowd` or `uv tool upgrade mockcrowd`. Turn the check off with `MOCKCROWD_NO_UPDATE_CHECK=1`.
+
 ## Pick the brain
 
 mockcrowd uses the first one it finds, or the one you pass with `--brain`.
@@ -89,6 +91,8 @@ Any other MCP client (Cursor, Codex, Claude Desktop, your own agent) can start i
 ```json
 {"mcpServers": {"mockcrowd": {"command": "mockcrowd", "args": ["mcp"]}}}
 ```
+
+To always run the newest release without installing, use uvx: `{"command": "uvx", "args": ["--python", "3.12", "mockcrowd[mcp]@latest", "mcp"]}`.
 
 | Tool | What it does |
 |---|---|

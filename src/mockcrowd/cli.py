@@ -201,10 +201,16 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     set_quiet(args.quiet)
     try:
-        return COMMANDS[args.command](args)
+        code = COMMANDS[args.command](args)
     except (BrainError, FileNotFoundError, ValueError) as exc:
         print(f"mockcrowd: {exc}", file=sys.stderr)
         return 2
+    if args.command != "mcp" and not args.quiet:  # MCP owns stdio; quiet means quiet
+        from .update import notice
+
+        if msg := notice():
+            print(f"\n{msg}", file=sys.stderr)
+    return code
 
 
 if __name__ == "__main__":
