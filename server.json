@@ -1,0 +1,19 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.phanisaimunipalli/mockcrowd",
+  "title": "mockcrowd",
+  "description": "Test a product idea on a crowd of AI personas grounded in real posts. Returns a verdict.",
+  "repository": {"url": "https://github.com/phanisaimunipalli/mockcrowd", "source": "github"},
+  "version": "0.3.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "mockcrowd",
+      "version": "0.3.0",
+      "runtimeHint": "uvx",
+      "runtimeArguments": [{"type": "named", "name": "--with", "value": "mcp>=2,<3"}],
+      "packageArguments": [{"type": "positional", "value": "mcp"}],
+      "transport": {"type": "stdio"}
+    }
+  ]
+}
