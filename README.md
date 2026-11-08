@@ -171,3 +171,5 @@ Simulation design follows [OASIS](https://github.com/camel-ai/oasis) by CAMEL-AI
 ## License
 
 Apache 2.0
+
+<!-- mcp-name: io.github.phanisaimunipalli/mockcrowd -->

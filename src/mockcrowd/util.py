@@ -18,7 +18,7 @@ from typing import Any, Callable, Iterable, TypeVar
 T = TypeVar("T")
 R = TypeVar("R")
 
-USER_AGENT = "mockcrowd/0.2 (+https://github.com/phanisaimunipalli/mockcrowd)"
+USER_AGENT = "mockcrowd/0.3 (+https://github.com/phanisaimunipalli/mockcrowd)"
 _quiet = False
 _CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]")
 
