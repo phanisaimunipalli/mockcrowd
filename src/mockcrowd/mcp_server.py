@@ -36,6 +36,7 @@ def _run_id(run_id: str) -> str:
 async def validate_idea(
     idea: str,
     price: str | None = None,
+    free: bool = False,
     audience: str | None = None,
     agents: int = 60,
     rounds: int = 1,
@@ -47,8 +48,9 @@ async def validate_idea(
     """Run a mockcrowd simulation on a product idea and return the verdict, numbers and report.
 
     idea: the pitch, as a founder would post it. price: for example "$4.99/month".
+    free: true for free ideas (open source features, free apps): judges use instead of payment.
     agents: crowd size, 10 to 1000 (default 60; a 60 agent run takes a few minutes).
-    sources: any of reddit, hn, bluesky, appstore (default reddit, hn, bluesky).
+    sources: any of reddit, hn, bluesky, github, appstore (default reddit, hn, bluesky, github).
     voices_file: optional JSONL, CSV or text file of real posts to ground the personas.
     brain: auto, claude, codex, code-puppy, openai, ollama or mock. model: passed through exactly.
     """
@@ -61,15 +63,18 @@ async def validate_idea(
     bad = [s for s in sources or [] if s not in ALL_SOURCES]
     if bad:
         raise ValueError(f"unknown sources {bad}; choose from {', '.join(ALL_SOURCES)}")
-    cfg = Config(agents=agents, rounds=rounds, price=price, audience=audience,
+    cfg = Config(agents=agents, rounds=rounds, price=price, free=free, audience=audience,
                  sources=list(sources or DEFAULT_SOURCES), voice_files=[voices_file] if voices_file else [])
     chosen = get_brain(brain, model)
     run = await anyio.to_thread.run_sync(lambda: validate(idea, chosen, cfg))
     rep = run["report"]
+    key = "would_use" if free else "would_pay"
     return {
         "run_id": run["id"],
+        "mode": rep["mode"],
         "verdict": rep["verdict"],
-        "would_pay": {"alone": rep["blind"]["would_pay"]["p"], "after_discussion": rep["final"]["would_pay"]["p"]},
+        key: {"alone": rep["blind"][key]["p"], "after_discussion": rep["final"][key]["p"]},
+        "interest": {"alone": rep["blind"]["interest"]["index"], "after_discussion": rep["final"]["interest"]["index"]},
         "try_free": {"alone": rep["blind"]["try_free"]["p"], "after_discussion": rep["final"]["try_free"]["p"]},
         "lift_over_control": rep["lift"],
         "confidence": rep["confidence"]["score"],

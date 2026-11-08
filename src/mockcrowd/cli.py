@@ -33,12 +33,16 @@ def build_parser() -> argparse.ArgumentParser:
     v = sub.add_parser("validate", help="run a crowd on a product idea")
     v.add_argument("idea", help="the product idea, as you would pitch it")
     v.add_argument("--price", help='price to test, for example "$4.99/month"')
+    v.add_argument("--free", action="store_true",
+                   help="the idea is free (open source feature, free app): judge use, not payment")
     v.add_argument("--audience", help="who it is for, if you already know")
     v.add_argument("--agents", type=int, default=500, help="crowd size (default 500)")
     v.add_argument("--rounds", type=int, default=2, help="discussion rounds (default 2)")
     v.add_argument("--source", action="append", dest="sources", choices=ALL_SOURCES,
                    help="live sources to search (repeatable; default all)")
     v.add_argument("--no-live", action="store_true", help="do not search the web; use only --voices files")
+    v.add_argument("--exclude", action="append", default=[],
+                   help="skip real posts whose link contains this text, for fair backtests (repeatable)")
     v.add_argument("--voices", action="append", default=[], help="JSONL, CSV or text file of real posts (repeatable)")
     v.add_argument("--community", help='where the discussion is set, for example "r/vinyl"')
     v.add_argument("--question", action="append", default=[],
@@ -89,9 +93,9 @@ def cmd_validate(args: argparse.Namespace) -> int:
     brain = get_brain(args.brain, args.model)
     cfg = Config(
         agents=args.agents, rounds=args.rounds, workers=args.workers, seed=args.seed,
-        price=args.price, audience=args.audience, community=args.community,
+        price=args.price, free=args.free, audience=args.audience, community=args.community,
         sources=[] if args.no_live else (args.sources or list(DEFAULT_SOURCES)),
-        voice_files=args.voices, questions=[parse_question(q) for q in args.question],
+        voice_files=args.voices, exclude=args.exclude, questions=[parse_question(q) for q in args.question],
         control=not args.no_control,
     )
     run = validate(args.idea, brain, cfg, out_dir=Path(args.out) if args.out else None)

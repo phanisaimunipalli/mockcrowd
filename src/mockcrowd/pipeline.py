@@ -12,9 +12,10 @@ from .brains import Brain
 from .sources import Voice, dedupe, files
 from .util import log
 
-ALL_SOURCES = ["reddit", "hn", "bluesky", "appstore"]
+ALL_SOURCES = ["reddit", "hn", "bluesky", "github", "appstore"]
 # Apple's public review feed returned no entries when tested (2026-10-19), so appstore is opt-in.
-DEFAULT_SOURCES = ["reddit", "hn", "bluesky"]
+# github only runs when the planner judges the audience to be developers.
+DEFAULT_SOURCES = ["reddit", "hn", "bluesky", "github"]
 
 
 @dataclass
@@ -26,10 +27,12 @@ class Config:
     workers: int = 8
     seed: int = 0
     price: str | None = None
+    free: bool = False  # judge use, not payment
     audience: str | None = None
     community: str | None = None
     sources: list[str] = field(default_factory=lambda: list(DEFAULT_SOURCES))
     voice_files: list[str] = field(default_factory=list)
+    exclude: list[str] = field(default_factory=list)  # drop real posts whose link or id contains these
     questions: list[S.Question] = field(default_factory=list)
     control: bool = True
     max_voices: int = 600
@@ -55,7 +58,7 @@ def validate(idea: str, brain: Brain, cfg: Config, out_dir: Path | None = None, 
         voices += files.load(path)
     if cfg.sources:
         voices += P.collect_voices(plan, cfg.sources, errors=errors)
-    voices = dedupe(voices)[: cfg.max_voices]
+    voices = [v for v in dedupe(voices) if not any(x in f"{v.url} {v.id}" for x in cfg.exclude)][: cfg.max_voices]
     if voices:
         voices = P.label_voices(brain, idea, plan, voices, workers=cfg.workers)
     if not voices:
@@ -65,9 +68,12 @@ def validate(idea: str, brain: Brain, cfg: Config, out_dir: Path | None = None, 
     crowd = P.design_personas(brain, idea, plan, voices, cfg.agents, cfg.batch_size, cfg.workers, cfg.seed)
     by_id = {p.id: p for p in crowd}
 
-    questions = S.default_questions(cfg.price) + cfg.questions
+    if cfg.free and cfg.price:
+        raise ValueError("an idea is either free or has a price, not both")
+    questions = S.default_questions(cfg.price, cfg.free) + cfg.questions
+    key = "would_use" if cfg.free else "would_pay"
     log("4/6 blind vote (each persona alone, real idea vs a bland control)")
-    placebo = S.placebo_pitch(brain, idea) if cfg.control else None
+    placebo = S.placebo_pitch(brain, idea, cfg.free) if cfg.control else None
     blind = S.blind_vote(brain, crowd, idea, placebo, questions, cfg.batch_size, cfg.workers, cfg.seed)
 
     log("5/6 discussion")
@@ -80,22 +86,24 @@ def validate(idea: str, brain: Brain, cfg: Config, out_dir: Path | None = None, 
     s_blind = R.summarize(blind, "idea", questions, cfg.seed)
     s_final = R.summarize(final, "idea", questions, cfg.seed)
     s_control = R.summarize(blind, "control", questions, cfg.seed) if placebo else None
-    lift = round(s_blind["would_pay"]["p"] - s_control["would_pay"]["p"], 3) if s_control else None
+    lead = (lambda s: s["interest"]["index"]) if cfg.free else (lambda s: s["would_pay"]["p"])
+    lift = round(lead(s_blind) - lead(s_control), 3) if s_control else None
     communities = len({v.community for v in voices if v.community})
     all_comments = [c for t in threads for c in t.comments]
     top = sorted(all_comments, key=lambda c: c.score, reverse=True)[:8]
     custom_keys = [q.key for q in cfg.questions]
     rep = {
-        "verdict": R.verdict(s_final["would_pay"]["p"], lift),
-        "demand_score": R.demand_score(s_final, s_control),
+        "mode": "free" if cfg.free else "paid",
+        "verdict": R.free_verdict(lead(s_final), lift) if cfg.free else R.verdict(lead(s_final), lift),
+        "demand_score": round(lead(s_final) - lead(s_control), 3) if s_control else lead(s_final),
         "blind": s_blind,
         "final": s_final,
         "control": s_control,
         "lift": lift,
-        "shift": round(s_final["would_pay"]["p"] - s_blind["would_pay"]["p"], 3),
-        "segments": R.by_segment(final, crowd, "idea", "would_pay"),
+        "shift": round(lead(s_final) - lead(s_blind), 3),
+        "segments": R.by_segment(final, crowd, "idea", key),
         "themes": R.objection_themes(brain, idea, final),
-        "confidence": R.confidence(crowd, len(voices), communities, s_final["would_pay"], latest_backtest_accuracy()),
+        "confidence": R.confidence(crowd, len(voices), communities, s_final[key], latest_backtest_accuracy()),
         "voices_used": len(voices),
         "communities": communities,
         "custom": {k: s_final.get(k) for k in custom_keys if k in s_final},

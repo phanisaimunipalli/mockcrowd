@@ -62,6 +62,7 @@ Claude has been run live end to end. The Codex, Code Puppy, Ollama and OpenAI ad
 | Reddit | Yes, free | Create a "script" app at reddit.com/prefs/apps and set `REDDIT_CLIENT_ID` and `REDDIT_CLIENT_SECRET`. Reddit blocks keyless requests. Free access is for non-commercial use. |
 | Hacker News | No | Comments through the Algolia search API |
 | Bluesky | No | Public post search |
+| GitHub | No | Issues and their top comments, only when the audience is developers. Set `GITHUB_TOKEN` for a higher rate limit. |
 | App Store | No | Opt in with `--source appstore`. Apple's public review feed returned no reviews when last tested. |
 | Anything else | | X, Threads, Instagram, Discord, surveys, support tickets, interview notes: put the posts in a file and pass `--voices posts.jsonl` (JSONL, CSV or text). |
 
@@ -99,11 +100,16 @@ Any other MCP client (Cursor, Codex, Claude Desktop, your own agent) can start i
 
 Agent runs default to 60 personas and 1 round to keep them quick.
 
+## Free ideas and open source features
+
+For something nobody pays for, such as an open source feature or a free app, add `--free`. The crowd is asked whether they would use it instead of whether they would pay, and the verdict comes from interest after the discussion compared with a bland control. To backtest on a real feature request, add `--exclude github.com/owner/repo/issues/123` so the crowd never sees the issue it is being scored against.
+
 ## Commands
 
 ```bash
-mockcrowd validate "idea" [--price P] [--audience A] [--agents 500] [--rounds 2]
-                          [--voices file.jsonl] [--no-live] [--source reddit|hn|bluesky|appstore]
+mockcrowd validate "idea" [--price P | --free] [--audience A] [--agents 500] [--rounds 2]
+                          [--voices file.jsonl] [--no-live] [--source reddit|hn|bluesky|github|appstore]
+                          [--exclude TEXT]
                           [--question "choice:first:Which feature first?:scan|alerts|wishlist"]
                           [--brain auto|claude|codex|code-puppy|ollama|openai] [--model M]
 mockcrowd collect "idea" -o voices.jsonl   # only gather real posts

@@ -48,12 +48,15 @@ class Question:
         return str(value or "").strip()[:300]
 
 
-def default_questions(price: str | None = None) -> list[Question]:
+def default_questions(price: str | None = None, free: bool = False) -> list[Question]:
+    """free: the idea costs nothing (an open source feature, a free app), so ask about use, not payment."""
     pay_text = f"Would you pay {price} for it?" if price else "Would you pay any money for it?"
+    decide = (Question("would_use", "yesno", "Would you actually use this within a month if it shipped?") if free
+              else Question("would_pay", "yesno", pay_text))
     return [
         Question("interest", "score", "How interested are you, honestly?", ["none", "low", "medium", "high"]),
         Question("try_free", "yesno", "Would you actually install or sign up if it were free?"),
-        Question("would_pay", "yesno", pay_text),
+        decide,
         Question("objection", "text", "Your single biggest reason NOT to use it."),
     ]
 
@@ -73,14 +76,14 @@ def parse_question(spec: str) -> Question:
 # ---------------------------------------------------------------- control pitch
 
 
-def placebo_pitch(brain: Brain, idea: str) -> str:
+def placebo_pitch(brain: Brain, idea: str, free: bool = False) -> str:
     """A same-category pitch with no differentiator. Real demand should beat it clearly."""
     prompt = f"""Write a bland control pitch for a demand experiment.
 
 REAL IDEA: {idea}
 
 Write a pitch for a generic product in the same category, aimed at the same people, with no new
-feature, no clear advantage over what already exists, and a slightly higher price. Same length and
+feature, no clear advantage over what already exists{", and also free" if free else ", and a slightly higher price"}. Same length and
 tone as the real idea. Do not mention the real idea.
 Return JSON: {{"pitch": "..."}}"""
 

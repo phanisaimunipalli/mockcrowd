@@ -9,7 +9,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from .brains import Brain, Task
-from .sources import Voice, appstore, bluesky, dedupe, fenced, hn, reddit
+from .sources import Voice, appstore, bluesky, dedupe, fenced, github, hn, reddit
 from .util import chunks, log, parallel_map, seed_from
 
 STANCES = ["positive", "neutral", "skeptical", "negative"]
@@ -69,10 +69,12 @@ Return JSON:
   "subreddits": ["r/name"],
   "search_queries": ["2 to 5 word queries real users would write about this problem"],
   "hn_queries": ["queries for Hacker News comments"],
+  "github_queries": ["GitHub issue search queries, ONLY if the audience is software developers, else empty"],
   "appstore_terms": ["names or terms of the closest existing apps"]}}
 
 Use 3 to 6 segments, including people who would NOT buy (for example happy with the status quo).
-Use 3 to 6 real, active subreddits, 4 to 8 search queries, 2 to 3 hn_queries, 2 to 3 appstore_terms."""
+Use 3 to 6 real, active subreddits, 4 to 8 search queries, 2 to 3 hn_queries, 2 to 3 appstore_terms,
+and 0 to 2 github_queries (short keyword queries, for example "rerank model support")."""
 
     def mock() -> dict[str, Any]:
         words = [w for w in idea.lower().split() if len(w) > 3][:3] or ["product"]
@@ -86,6 +88,7 @@ Use 3 to 6 real, active subreddits, 4 to 8 search queries, 2 to 3 hn_queries, 2 
             "subreddits": [f"r/{words[0]}"],
             "search_queries": [" ".join(words)],
             "hn_queries": [" ".join(words)],
+            "github_queries": [],
             "appstore_terms": [words[0]],
         }
 
@@ -117,6 +120,9 @@ def collect_voices(
     if "bluesky" in sources:
         for q in queries[:4]:
             jobs.append((f"bluesky '{q}'", lambda q=q: bluesky.search(q)))
+    if "github" in sources:
+        for q in plan.get("github_queries", [])[:2]:
+            jobs.append((f"github '{q}'", lambda q=q: github.search(q)))
     if "appstore" in sources:
         for term in plan.get("appstore_terms", [])[:3]:
             jobs.append((f"appstore '{term}'", lambda t=term: appstore.search(t)))

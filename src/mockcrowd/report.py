@@ -153,6 +153,18 @@ def verdict(pay_final: float, lift: float | None) -> str:
     return "Weak demand: most of the crowd would not pay"
 
 
+def free_verdict(interest_final: float, lift: float | None) -> str:
+    """For free ideas the lead measure is interest after the discussion (0 to 1), which tracked real
+    GitHub reactions best in our first open source test. Thresholds are starting points."""
+    if lift is not None and lift < 0.10:
+        return "No real interest signal: the idea does not beat a bland control"
+    if interest_final >= 0.50 and (lift is None or lift >= 0.20):
+        return "Strong interest: people would use this"
+    if interest_final >= 0.35:
+        return "Some interest: worth a small version and real user feedback"
+    return "Weak interest: most of the crowd would not use it"
+
+
 def demand_score(summary_final: dict[str, Any], summary_control: dict[str, Any] | None) -> float:
     """Single number used by backtests: final would-pay share, minus the control's."""
     pay = summary_final["would_pay"]["p"]
@@ -171,7 +183,9 @@ def _pct(x: float) -> str:
 def render_markdown(run: dict[str, Any]) -> str:
     r = run["report"]
     blind, final, control = r["blind"], r["final"], r.get("control")
-    pay_b, pay_f = blind["would_pay"], final["would_pay"]
+    free = r.get("mode") == "free"
+    key, word = ("would_use", "use") if free else ("would_pay", "pay")
+    pay_b, pay_f = blind[key], final[key]
     conf = r["confidence"]
     lines = [
         f"# mockcrowd verdict: {r['verdict']}",
@@ -186,12 +200,19 @@ def render_markdown(run: dict[str, Any]) -> str:
         "",
         "| Measure | Blind (alone) | After discussion |",
         "|---|---|---|",
-        f"| Would pay | {_pct(pay_b['p'])} ({_pct(pay_b['low'])} to {_pct(pay_b['high'])}) | "
+        f"| Would {word} | {_pct(pay_b['p'])} ({_pct(pay_b['low'])} to {_pct(pay_b['high'])}) | "
         f"{_pct(pay_f['p'])} ({_pct(pay_f['low'])} to {_pct(pay_f['high'])}) |",
         f"| Would try free | {_pct(blind['try_free']['p'])} | {_pct(final['try_free']['p'])} |",
         f"| Interest index (0 to 1) | {blind['interest']['index']} | {final['interest']['index']} |",
     ]
-    if control:
+    if control and free:
+        lines += [
+            "",
+            f"**Control check:** a bland same-category idea scored interest {control['interest']['index']}. "
+            f"Lift of the real idea: **{r['lift']:+.2f}**. "
+            + ("A lift under 0.10 means the crowd is just being agreeable." if r["lift"] < 0.10 else ""),
+        ]
+    elif control:
         lines += [
             "",
             f"**Control check:** a bland same-category pitch got {_pct(control['would_pay']['p'])} would pay. "
@@ -201,7 +222,7 @@ def render_markdown(run: dict[str, Any]) -> str:
     lines += ["", f"## Confidence: {conf['score']}/100 ({conf['label']})", ""]
     lines += [f"- {k}: {v:.0%}" for k, v in conf["parts"].items()]
     lines += [f"- caveat: {x}" for x in conf["reasons"]]
-    lines += ["", "## Who would pay, by segment", "", "| Segment | Would pay | n |", "|---|---|---|"]
+    lines += ["", f"## Who would {word}, by segment", "", f"| Segment | Would {word} | n |", "|---|---|---|"]
     lines += [f"| {s} | {_pct(v['p'])} | {v['n']} |" for s, v in r["segments"].items()]
     if r["themes"]:
         lines += ["", "## Top objections", "", "| Theme | Share | Example |", "|---|---|---|"]

@@ -19,11 +19,13 @@ a blind vote against a bland control pitch, a Reddit-style discussion, then a fi
    `pip install mockcrowd`
 2. Write the pitch the way a founder would post it: what it does, for whom, and the price.
    Ask the user for the price and audience if they did not give them. Do not invent them.
+   If the idea is free (an open source feature, a free app), use `--free` instead of `--price`.
 3. Run:
    ```bash
    mockcrowd validate "<pitch>" --price "<price>" --audience "<audience>"
    ```
-   Defaults: 500 agents, 2 discussion rounds, live sources reddit, hn and bluesky. Reddit needs
+   Defaults: 500 agents, 2 discussion rounds, live sources reddit, hn, bluesky and github (github only
+   for developer audiences). Reddit needs
    REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET (a free "script" app); without them it is skipped. It prints
    progress to stderr and a markdown report to stdout, and saves the run under `~/.mockcrowd/runs/`.
    For a quick look first, use `--agents 60 --rounds 1`.
