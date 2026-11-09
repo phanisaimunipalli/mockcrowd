@@ -67,6 +67,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("runs", help="list past runs")
 
+    pe = sub.add_parser("personas", help="export the personas of a past run, with traits and the real posts behind them")
+    pe.add_argument("run_id")
+    pe.add_argument("-o", "--output", help="write JSON here instead of printing it")
+
     o = sub.add_parser("outcome", help="record what really happened after a run (feeds the backtest)")
     o.add_argument("run_id")
     o.add_argument("--demand", required=True, choices=["high", "medium", "low"])
@@ -121,6 +125,26 @@ def cmd_collect(args: argparse.Namespace) -> int:
 def cmd_report(args: argparse.Namespace) -> int:
     run = store.load_run(args.run_id)
     print(json.dumps(run["report"], indent=2) if args.json else render_markdown(run))
+    return 0
+
+
+def cmd_personas(args: argparse.Namespace) -> int:
+    run = store.load_run(args.run_id)
+    posts = {v["id"]: v for v in run["voices"]}
+    model = run.get("trait_model") or {}
+    out = {
+        "run_id": run["id"], "idea": run["idea"], "dims": model.get("dims", []),
+        "personas": [p | {"sources": [{"id": i, "url": posts[i].get("url", ""), "community": posts[i].get("community", "")}
+                                      for i in p.get("source_ids", []) if i in posts]} for p in run["personas"]],
+    }
+    text = json.dumps(out, indent=2)
+    if args.output:
+        path = Path(args.output)
+        path.write_text(text, encoding="utf-8")
+        path.chmod(0o600)  # personas quote real posts and the idea may be unannounced
+        print(f"wrote {len(out['personas'])} personas to {path}")
+    else:
+        print(text)
     return 0
 
 
@@ -191,7 +215,7 @@ def cmd_mcp(_: argparse.Namespace) -> int:
 
 
 COMMANDS = {
-    "validate": cmd_validate, "collect": cmd_collect, "report": cmd_report, "runs": cmd_runs,
+    "validate": cmd_validate, "collect": cmd_collect, "report": cmd_report, "runs": cmd_runs, "personas": cmd_personas,
     "outcome": cmd_outcome, "eval": cmd_eval, "brains": cmd_brains, "install-skill": cmd_install_skill,
     "mcp": cmd_mcp,
 }

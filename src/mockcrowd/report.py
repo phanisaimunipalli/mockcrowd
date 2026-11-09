@@ -224,6 +224,23 @@ def render_markdown(run: dict[str, Any]) -> str:
     lines += [f"- caveat: {x}" for x in conf["reasons"]]
     lines += ["", f"## Who would {word}, by segment", "", f"| Segment | Would {word} | n |", "|---|---|---|"]
     lines += [f"| {s} | {_pct(v['p'])} | {v['n']} |" for s, v in r["segments"].items()]
+    tr = r.get("traits") or {}
+    if tr.get("structured") and tr.get("links"):
+        names = lambda k: k.replace("_", " ")
+        lines += ["", "## How the crowd's traits connect", "",
+                  f"Scored on {tr['posts_scored']} real posts. Mean link strength between traits: {tr['structure']:.2f}. "
+                  "Personas were drawn from these links, not trait by trait. "
+                  f"Only {tr.get('stated_share', 0):.0%} of the trait scores were stated in a post; the rest were inferred "
+                  "by the AI, so these links partly reflect its own assumptions about how traits go together.", "",
+                  "| Trait | Trait | Link (r) |", "|---|---|---|"]
+        lines += [f"| {names(x['a'])} | {names(x['b'])} | {x['r']:+.2f} |" for x in tr["links"]]
+        if "trait_error" in tr:
+            lines += ["", f"Crowd check: its trait links differ from the real ones by {tr['trait_error']:.2f} on average "
+                      f"({tr['trait_error_independent']:.2f} if traits had been drawn independently). "
+                      "Small crowds are noisy: use 150 or more personas for a clean check."]
+    elif tr and not tr.get("structured"):
+        lines += ["", "## How the crowd's traits connect", "",
+                  f"Only {tr.get('posts_scored', 0)} real posts could be scored, too few to measure links, so traits were drawn independently."]
     if r["themes"]:
         lines += ["", "## Top objections", "", "| Theme | Share | Example |", "|---|---|---|"]
         lines += [f"| {t.get('theme')} | {_pct(t.get('share', 0))} | {str(t.get('quote', '')).replace('|', '/')} |" for t in r["themes"]]

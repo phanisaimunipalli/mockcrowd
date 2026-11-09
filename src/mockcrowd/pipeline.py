@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from . import __version__, personas as P, report as R, sim as S, store
+from . import __version__, personas as P, report as R, sim as S, store, traits as T
 from .brains import Brain
 from .sources import Voice, dedupe, files
 from .util import log
@@ -65,7 +65,12 @@ def validate(idea: str, brain: Brain, cfg: Config, out_dir: Path | None = None, 
         log("  warning: no real voices; personas will be ungrounded and confidence will be low")
 
     log("3/6 designing personas")
-    crowd = P.design_personas(brain, idea, plan, voices, cfg.agents, cfg.batch_size, cfg.workers, cfg.seed)
+    trait_model = T.measure(voices, plan)
+    crowd = P.design_personas(brain, idea, plan, voices, cfg.agents, cfg.batch_size, cfg.workers, cfg.seed, trait_model)
+    fit = T.fidelity(crowd, trait_model, cfg.seed)
+    if trait_model["structured"]:
+        log(f"  trait model: {trait_model['n']} posts scored, structure {T.structure(trait_model):.2f}"
+            + (f", crowd error {fit['trait_error']} vs {fit['trait_error_independent']} if traits were independent" if fit else ""))
     by_id = {p.id: p for p in crowd}
 
     if cfg.free and cfg.price:
@@ -105,6 +110,10 @@ def validate(idea: str, brain: Brain, cfg: Config, out_dir: Path | None = None, 
         "themes": R.objection_themes(brain, idea, final),
         "confidence": R.confidence(crowd, len(voices), communities, s_final[key], latest_backtest_accuracy()),
         "voices_used": len(voices),
+        "traits": {"structured": trait_model["structured"], "posts_scored": trait_model["n"], "stated_share": trait_model["stated_share"],
+                   "structure": T.structure(trait_model),
+                   "links": [{"a": a, "b": b, "r": round(r, 2)} for a, b, r in T.top_links(trait_model)],
+                   **(fit or {})},
         "communities": communities,
         "custom": {k: s_final.get(k) for k in custom_keys if k in s_final},
         "top_comments": [{"handle": c.handle, "score": c.score, "text": c.text} for c in top],
@@ -123,6 +132,7 @@ def validate(idea: str, brain: Brain, cfg: Config, out_dir: Path | None = None, 
         "placebo": placebo,
         "voices": [v.to_dict() for v in voices],
         "personas": [p.to_dict() for p in crowd],
+        "trait_model": trait_model,
         "answers": {"blind": blind, "final": final},
         "threads": [t.to_dict() for t in threads],
         "report": rep,

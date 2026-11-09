@@ -119,11 +119,23 @@ mockcrowd validate "idea" [--price P | --free] [--audience A] [--agents 500] [--
 mockcrowd collect "idea" -o voices.jsonl   # only gather real posts
 mockcrowd runs                             # list past runs
 mockcrowd report <run-id> [--json]
+mockcrowd personas <run-id> [-o file.json] # export the personas, their traits and the real posts behind them
 mockcrowd outcome <run-id> --demand high|medium|low --note "what really happened"
 mockcrowd eval --suite quick|full|backtest [--gate]
 ```
 
 Runs are saved in `~/.mockcrowd/runs/<run-id>/` as `report.md` and `run.json` (every voice, persona, vote and comment).
+
+## How personas are designed
+
+Each persona is a point in a trait space measured on the real posts, not a free draw from a prompt.
+
+1. Every real post is scored (0 to 1) on six core traits (budget sensitivity, tech savvy, status quo attachment, switching cost, vendor trust, pain urgency) and up to four traits the planner picks for your audience. Each score is marked **stated** (the post shows it) or **inferred** (the AI is estimating).
+2. mockcrowd measures how those traits move together in each segment, and pulls small segments toward the pooled posts so thin evidence cannot invent structure.
+3. Each persona's trait profile is sampled from those links, conditional on its stance. It is then matched to the three real posts nearest to that profile, and the AI writes the person to fit.
+4. The report shows the strongest trait links and how closely the crowd reproduces them, next to a crowd that draws traits independently. `mockcrowd personas <run-id>` exports everything.
+
+Limits: a post is not a person, and posters are self selected. Most trait scores are inferred, so the measured links partly reflect the AI's own assumptions; the report prints the stated share. Links are correlations, not causes. Below 8 scored posts mockcrowd draws traits independently and says so. Whether structured traits improve verdict accuracy is not yet measured.
 
 ## How a run works
 

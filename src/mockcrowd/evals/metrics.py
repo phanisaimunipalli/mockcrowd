@@ -8,12 +8,13 @@ import re
 from collections import Counter
 from typing import Any
 
+from .. import traits as T
 from ..brains import Brain, Task
 from ..personas import STANCES, Persona
 from ..sim import blind_vote, default_questions
 from ..util import chunks, seed_from
 
-LOWER_IS_BETTER = {"agreeableness", "persuasion_drift", "leakage"}
+LOWER_IS_BETTER = {"agreeableness", "persuasion_drift", "leakage", "trait_error"}
 
 
 def _words(text: str) -> set[str]:
@@ -32,6 +33,10 @@ def run_metrics(run: dict[str, Any]) -> dict[str, float]:
         "mix_fidelity": mix_fidelity(voices, personas),
         "diversity": diversity(personas, seed=run["config"].get("seed", 0)),
     }
+    fit = T.fidelity(personas, run["trait_model"], run["config"].get("seed", 0)) if run.get("trait_model") else None
+    if fit:  # trait_gain: how much closer to the real trait links than a crowd drawing traits independently
+        metrics.update(trait_error=fit["trait_error"], trait_spread=fit["trait_spread"],
+                       trait_gain=round(fit["trait_error_independent"] - fit["trait_error"], 3))
     rep = run["report"]
     if rep.get("control"):
         metrics["control_lift"] = rep["lift"]
