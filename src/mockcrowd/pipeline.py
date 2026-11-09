@@ -43,15 +43,12 @@ def latest_backtest_accuracy() -> float | None:
     return rows[-1]["metrics"]["backtest_accuracy"] if rows else None
 
 
-def validate(idea: str, brain: Brain, cfg: Config, out_dir: Path | None = None, save: bool = True) -> dict[str, Any]:
-    started = time.time()
-    run_id = store.new_run_id(idea)
-    log(f"mockcrowd {__version__} | run {run_id} | brain {brain.describe()} | {cfg.agents} agents")
-
-    log("1/6 planning the audience")
+def _ground(idea: str, brain: Brain, cfg: Config, total: int) -> tuple[dict[str, Any], list[Voice], list[str]]:
+    """Plan the audience, collect real posts, and score them. Shared by validate and design."""
+    log(f"1/{total} planning the audience")
     plan = P.plan_audience(brain, idea, cfg.audience)
 
-    log("2/6 collecting real voices")
+    log(f"2/{total} collecting real voices")
     errors: list[str] = []
     voices: list[Voice] = []
     for path in cfg.voice_files:
@@ -63,6 +60,38 @@ def validate(idea: str, brain: Brain, cfg: Config, out_dir: Path | None = None, 
         voices = P.label_voices(brain, idea, plan, voices, workers=cfg.workers)
     if not voices:
         log("  warning: no real voices; personas will be ungrounded and confidence will be low")
+    return plan, voices, errors
+
+
+def design(idea: str, brain: Brain, cfg: Config, pins: dict[str, float] | None = None) -> dict[str, Any]:
+    """Only the design half: real posts to a trait model to personas. No votes, no verdict."""
+    started = time.time()
+    log(f"mockcrowd {__version__} | design | brain {brain.describe()} | {cfg.agents} personas")
+    plan, voices, errors = _ground(idea, brain, cfg, total=3)
+    T.check_pins(pins or {}, T.dims(plan))  # fail before spending calls on the design step
+    log("3/3 designing personas")
+    model = T.measure(voices, plan)
+    crowd = P.design_personas(brain, idea, plan, voices, cfg.agents, cfg.batch_size, cfg.workers, cfg.seed, model, pins)
+    fit = T.fidelity(crowd, model, cfg.seed)
+    return {
+        "version": __version__, "idea": idea, "brain": brain.describe(), "pins": pins or {},
+        "plan": plan, "dims": model["dims"], "trait_model": model,
+        "traits": {"structured": model["structured"], "posts_scored": model["n"], "stated_share": model["stated_share"],
+                   "structure": T.structure(model),
+                   "links": [{"a": a, "b": b, "r": round(r, 2)} for a, b, r in T.top_links(model)], **(fit or {})},
+        "personas": [p.to_dict() for p in crowd],
+        "voices": [v.to_dict() for v in voices],
+        "source_errors": errors, "seconds": round(time.time() - started, 1),
+        "llm_calls": brain.calls, "llm_cost_usd": round(brain.cost_usd, 4) if brain.cost_usd else None,
+    }
+
+
+def validate(idea: str, brain: Brain, cfg: Config, out_dir: Path | None = None, save: bool = True) -> dict[str, Any]:
+    started = time.time()
+    run_id = store.new_run_id(idea)
+    log(f"mockcrowd {__version__} | run {run_id} | brain {brain.describe()} | {cfg.agents} agents")
+
+    plan, voices, errors = _ground(idea, brain, cfg, total=6)
 
     log("3/6 designing personas")
     trait_model = T.measure(voices, plan)

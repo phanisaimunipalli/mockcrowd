@@ -274,6 +274,7 @@ def design_personas(
     workers: int = 8,
     seed: int = 0,
     model: dict[str, Any] | None = None,
+    pins: dict[str, float] | None = None,
 ) -> list[Persona]:
     """Each persona gets a trait profile sampled from the measured trait model and the real posts nearest to it."""
     model = model or T.measure(voices, plan)
@@ -289,7 +290,7 @@ def design_personas(
         random.Random(seed_from(seed, seg)).shuffle(stance_list)
         group = [v for v in voices if v.labels.get("segment") == seg] or voices
         pool = [(v, T.vector(v.labels, ds)) for v in group]
-        profiles = T.sample(model, seg, stance_list, random.Random(seed_from(seed, seg, "traits")))
+        profiles = T.sample(model, seg, stance_list, random.Random(seed_from(seed, seg, "traits")), pins)
         slots = [{"stance": st, "traits": pr, "posts": T.closest(pool, pr, st, ds)} for st, pr in zip(stance_list, profiles)]
         for bi, batch in enumerate(chunks(slots, batch_size)):
             jobs.append((seg, seg_desc.get(seg, ""), batch, bi))

@@ -84,3 +84,45 @@ def test_run_carries_traits_and_exports(voices_file, capsys, tmp_path):
     assert "How the crowd's traits connect" in render_markdown(store.load_run(run["id"]))
     assert main(["personas", run["id"], "-o", str(tmp_path / "p.json")]) == 0
     assert (tmp_path / "p.json").stat().st_mode & 0o777 == 0o600
+
+
+def test_pins_fix_a_trait_and_pull_linked_traits():
+    v = voices(n=200)
+    model = T.measure(v, PLAN)
+    ds = model["dims"]
+    free = T.sample(model, "a", ["neutral"] * 200, random.Random(5))
+    pinned = T.sample(model, "a", ["neutral"] * 200, random.Random(5), {"tech_savvy": 0.95})
+    assert all(p["tech_savvy"] == 0.95 for p in pinned)
+    a, b = ds[0], ds[1]  # budget_sensitivity and tech_savvy are linked in the test data
+    assert abs(sum(p[a] for p in pinned) / 200 - sum(p[a] for p in free) / 200) > 0.05
+
+
+def test_pin_parsing_and_checks():
+    assert T.parse_level("high") == 0.85 and T.parse_level("0.3") == 0.3
+    for bad in ("loud", "2"):
+        try:
+            T.parse_level(bad)
+        except ValueError:
+            continue
+        raise AssertionError(bad)
+    T.check_pins({"tech_savvy": 0.5}, T.dims(PLAN))
+    try:
+        T.check_pins({"nope": 0.5}, T.dims(PLAN))
+    except ValueError as exc:
+        assert "tech_savvy" in str(exc)
+    else:
+        raise AssertionError("unknown trait accepted")
+
+
+def test_design_command_exports_personas_without_votes(voices_file, tmp_path, capsys):
+    out = tmp_path / "pop.json"
+    assert main(["-q", "design", "vinyl collectors", "--brain", "mock", "--agents", "40", "--no-live",
+                 "--voices", str(voices_file), "--pin", "tech_savvy=high", "-o", str(out)]) == 0
+    import json as _json
+
+    data = _json.loads(out.read_text())
+    assert len(data["personas"]) == 40 and data["pins"] == {"tech_savvy": 0.85}
+    assert all(p["traits"]["tech_savvy"] == 0.85 and p["sources"] for p in data["personas"])
+    assert data["links"] and out.stat().st_mode & 0o777 == 0o600
+    assert not store.list_runs()  # a design is not a run
+    assert main(["-q", "design", "x", "--brain", "mock", "--no-live", "--voices", str(voices_file), "--pin", "nope=low"]) == 2

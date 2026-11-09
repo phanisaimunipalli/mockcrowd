@@ -12,7 +12,7 @@ from pathlib import Path
 
 from . import __version__, store
 from .brains import BRAIN_NAMES, BrainError, available_brains, get_brain
-from .pipeline import ALL_SOURCES, DEFAULT_SOURCES, Config, validate
+from .pipeline import ALL_SOURCES, DEFAULT_SOURCES, Config, design, validate
 from .report import render_markdown
 from .sim import parse_question
 from .util import set_quiet
@@ -25,7 +25,7 @@ def _brain_args(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="mockcrowd", description="Validate your product idea before you build.")
+    parser = argparse.ArgumentParser(prog="mockcrowd", description="Design AI populations with connected traits from real posts, and test product ideas on them.")
     parser.add_argument("--version", action="version", version=f"mockcrowd {__version__}")
     parser.add_argument("-q", "--quiet", action="store_true", help="no progress output")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -53,6 +53,21 @@ def build_parser() -> argparse.ArgumentParser:
     v.add_argument("--out", help="directory for run.json and report.md (default ~/.mockcrowd/runs/<id>)")
     v.add_argument("--json", action="store_true", help="print the report as JSON instead of markdown")
     _brain_args(v)
+
+    d = sub.add_parser("design", help="design a population of personas with connected traits, no votes")
+    d.add_argument("audience", help="who the population is: an audience, a product idea, or a question's audience")
+    d.add_argument("--agents", type=int, default=100, help="population size (default 100)")
+    d.add_argument("--pin", action="append", default=[], metavar="TRAIT=VALUE",
+                   help="fix a trait for everyone, e.g. vendor_trust=low or tech_savvy=0.8; the other traits adjust (repeatable)")
+    d.add_argument("--source", action="append", dest="sources", choices=ALL_SOURCES,
+                   help="live sources to search (repeatable; default all)")
+    d.add_argument("--no-live", action="store_true", help="do not search the web; use only --voices files")
+    d.add_argument("--voices", action="append", default=[], help="JSONL, CSV or text file of real posts (repeatable)")
+    d.add_argument("--exclude", action="append", default=[], help="skip real posts whose link contains this text (repeatable)")
+    d.add_argument("--workers", type=int, default=8, help="parallel LLM calls (default 8)")
+    d.add_argument("--seed", type=int, default=0)
+    d.add_argument("-o", "--output", help="write JSON here instead of printing it")
+    _brain_args(d)
 
     c = sub.add_parser("collect", help="only gather and save real voices for an idea")
     c.add_argument("idea")
@@ -128,23 +143,47 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_personas(args: argparse.Namespace) -> int:
-    run = store.load_run(args.run_id)
+def persona_export(run: dict) -> dict:
+    """Personas with their traits and the real posts behind them, from a run or a design."""
     posts = {v["id"]: v for v in run["voices"]}
     model = run.get("trait_model") or {}
-    out = {
-        "run_id": run["id"], "idea": run["idea"], "dims": model.get("dims", []),
+    return {
+        "idea": run["idea"], "dims": model.get("dims", []),
+        "traits": {k: v for k, v in (run.get("traits") or run.get("report", {}).get("traits") or {}).items() if k != "links"},
+        "links": (run.get("traits") or run.get("report", {}).get("traits") or {}).get("links", []),
         "personas": [p | {"sources": [{"id": i, "url": posts[i].get("url", ""), "community": posts[i].get("community", "")}
                                       for i in p.get("source_ids", []) if i in posts]} for p in run["personas"]],
     }
-    text = json.dumps(out, indent=2)
-    if args.output:
-        path = Path(args.output)
+
+
+def write_or_print(data: dict, output: str | None) -> None:
+    text = json.dumps(data, indent=2)
+    if output:
+        path = Path(output)
         path.write_text(text, encoding="utf-8")
         path.chmod(0o600)  # personas quote real posts and the idea may be unannounced
-        print(f"wrote {len(out['personas'])} personas to {path}")
+        print(f"wrote {len(data['personas'])} personas to {path}")
     else:
         print(text)
+
+
+def cmd_personas(args: argparse.Namespace) -> int:
+    run = store.load_run(args.run_id)
+    write_or_print({"run_id": run["id"]} | persona_export(run), args.output)
+    return 0
+
+
+def cmd_design(args: argparse.Namespace) -> int:
+    from .traits import parse_level
+
+    brain = get_brain(args.brain, args.model)
+    cfg = Config(agents=args.agents, workers=args.workers, seed=args.seed,
+                 sources=[] if args.no_live else (args.sources or list(DEFAULT_SOURCES)),
+                 voice_files=args.voices, exclude=args.exclude)
+    pins = {name.strip().replace(" ", "_").replace("-", "_"): parse_level(raw)
+            for name, _, raw in (text.partition("=") for text in args.pin)}
+    result = design(args.audience, brain, cfg, pins)
+    write_or_print(persona_export(result) | {"pins": result["pins"]}, args.output)
     return 0
 
 
@@ -215,7 +254,7 @@ def cmd_mcp(_: argparse.Namespace) -> int:
 
 
 COMMANDS = {
-    "validate": cmd_validate, "collect": cmd_collect, "report": cmd_report, "runs": cmd_runs, "personas": cmd_personas,
+    "validate": cmd_validate, "collect": cmd_collect, "report": cmd_report, "runs": cmd_runs, "personas": cmd_personas, "design": cmd_design,
     "outcome": cmd_outcome, "eval": cmd_eval, "brains": cmd_brains, "install-skill": cmd_install_skill,
     "mcp": cmd_mcp,
 }

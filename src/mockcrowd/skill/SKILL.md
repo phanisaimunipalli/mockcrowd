@@ -1,14 +1,28 @@
 ---
 name: mockcrowd
-description: Use when the user wants to validate a product idea, test demand before building, check whether people would pay, test a price or feature, or asks "would people use this". Runs mockcrowd, a local simulation of hundreds of personas grounded in real Reddit, Hacker News and App Store posts, and reports a demand verdict with a confidence score and the top objections.
+description: Use when the user wants to design a population of AI personas with realistic connected traits, or to validate a product idea, test demand before building, check whether people would pay, test a price or feature, or asks "would people use this". Runs mockcrowd, which grounds personas in real Reddit, Hacker News, Bluesky and GitHub posts, and either exports the designed population or reports a demand verdict with a confidence score and the top objections.
 ---
 
 # mockcrowd
 
-mockcrowd simulates a crowd of real-world-grounded personas reacting to a product idea:
-a blind vote against a bland control pitch, a Reddit-style discussion, then a final vote.
+mockcrowd designs populations of AI personas whose traits connect the way real people's do, grounded in
+real posts. It can export the population, or test a product idea on it: a blind vote against a bland
+control pitch, a Reddit-style discussion, then a final vote.
 
-## When to use
+## Designing a population
+
+When the user wants personas, not a verdict ("design 100 personas for X", "a realistic crowd of Y"):
+
+```bash
+mockcrowd design "<audience>" --agents 100 -o crowd.json
+mockcrowd design "<audience>" --pin <trait>=low|medium|high|0.8 -o crowd.json   # fix a trait; linked traits adjust
+```
+
+The JSON holds each persona with traits (0 to 1) and the real posts behind it, plus the strongest trait
+links. Trait names for `--pin` are in `dims`. Report the stated share (`traits.stated_share`): most trait
+scores are the AI's inference, so the links partly reflect its assumptions. Say so when you present them.
+
+## When to use validation
 
 - "Validate my idea for X", "would people pay for X", "test this price", "is there demand for X"
 - Comparing two versions of a pitch, price or feature (run once per version, same `--seed`)

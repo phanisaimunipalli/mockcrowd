@@ -202,25 +202,76 @@ def _stance_bounds(values: list[float]) -> dict[str, tuple[float, float]]:
     return out
 
 
-def sample(model: dict[str, Any], seg: str, stances: list[str], rng: random.Random) -> list[dict[str, float]]:
-    """One trait profile per stance. Traits are drawn conditional on the stance, so stance links to the others."""
+LEVELS = {"low": 0.15, "medium": 0.5, "high": 0.85}
+
+
+def parse_level(raw: str) -> float:
+    """'low', 'medium', 'high' or a number from 0 to 1."""
+    text = raw.strip().lower()
+    try:
+        value = LEVELS[text] if text in LEVELS else float(text)
+    except ValueError:
+        raise ValueError(f"trait value must be low, medium, high or a number from 0 to 1, got {raw!r}") from None
+    if not 0.0 <= value <= 1.0:
+        raise ValueError(f"trait value must be between 0 and 1, got {value}")
+    return value
+
+
+def check_pins(pins: dict[str, float], ds: list[str]) -> None:
+    allowed = [d for d in ds if d != "stance"]
+    for name in pins:
+        if name not in allowed:
+            raise ValueError(f"unknown trait {name!r}; this audience has: {', '.join(allowed)}")
+
+
+def _solve(low: list[list[float]], b: list[float]) -> list[float]:
+    """Solve (L L^T) x = b given the Cholesky factor L."""
+    n = len(b)
+    y = [0.0] * n
+    for i in range(n):
+        y[i] = (b[i] - sum(low[i][t] * y[t] for t in range(i))) / low[i][i]
+    x = [0.0] * n
+    for i in reversed(range(n)):
+        x[i] = (y[i] - sum(low[t][i] * x[t] for t in range(i + 1, n))) / low[i][i]
+    return x
+
+
+def _z_of(values: list[float], v: float) -> float:
+    """Normal score of a value within the real spread of that trait (mid-rank, kept off the extremes)."""
+    if not values:
+        return ND.inv_cdf(min(0.98, max(0.02, v)))
+    below = sum(1 for x in values if x < v) + 0.5 * sum(1 for x in values if x == v)
+    return ND.inv_cdf(min(0.98, max(0.02, below / len(values))))
+
+
+def sample(model: dict[str, Any], seg: str, stances: list[str], rng: random.Random,
+           pins: dict[str, float] | None = None) -> list[dict[str, float]]:
+    """One trait profile per stance, drawn conditional on that stance and on any pinned traits."""
     ds = model["dims"]
     spec = model["segments"].get(seg) or model["pooled"]
     si = ds.index("stance")
-    rest = [i for i in range(len(ds)) if i != si]
+    pins = {d: v for d, v in (pins or {}).items() if d in ds and d != "stance"}
+    given = [si] + [ds.index(d) for d in pins]
+    free = [i for i in range(len(ds)) if i not in given]
     corr = spec["corr"]
-    rho = [corr[i][si] for i in rest]
-    cond = [[corr[i][j] - rho[a] * rho[b] for b, j in enumerate(rest)] for a, i in enumerate(rest)]
+    cc = [[corr[a][b] for b in given] for a in given]
+    fc = [[corr[a][b] for b in given] for a in free]
+    lcc = cholesky(cc)
+    kmat = [_solve(lcc, [corr[g][f] for g in given]) for f in free]  # row f: Scc^-1 Scf
+    cond = [[corr[f][g] - sum(fc[a][t] * kmat[b][t] for t in range(len(given))) for b, g in enumerate(free)]
+            for a, f in enumerate(free)]
     low = cholesky(cond)
     bounds = _stance_bounds(spec["values"].get("stance", []))
+    pin_z = [_z_of(spec["values"].get(d, []), v) for d, v in pins.items()]
     out = []
     for st in stances:
         lo, hi = bounds[st]
         zs = ND.inv_cdf(min(0.999, max(0.001, lo + (hi - lo) * rng.random())))
-        eps = [rng.gauss(0, 1) for _ in rest]
-        profile = {}
-        for a, i in enumerate(rest):
-            z = rho[a] * zs + sum(low[a][b] * eps[b] for b in range(a + 1))
+        zc = [zs] + pin_z
+        eps = [rng.gauss(0, 1) for _ in free]
+        profile = dict(pins)
+        for a, i in enumerate(free):
+            z = sum(kmat[a][t] * zc[t] for t in range(len(given))) + sum(low[a][b] * eps[b] for b in range(a + 1))
             profile[ds[i]] = quantile(spec["values"].get(ds[i], []), ND.cdf(z))
         out.append(profile)
     return out
