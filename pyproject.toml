@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mockcrowd"
-version = "0.3.0"
+version = "0.4.0"
 description = "An AI population designer: personas with connected traits, grounded in real posts, that can also test your product idea."
 readme = "README.md"
 license = "Apache-2.0"
