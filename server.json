@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.phanisaimunipalli/mockcrowd",
   "title": "mockcrowd",
-  "description": "Test a product idea on a crowd of AI personas grounded in real posts. Returns a verdict.",
+  "description": "AI population personas with connected traits, grounded in real posts. Also tests ideas.",
   "repository": {"url": "https://github.com/phanisaimunipalli/mockcrowd", "source": "github"},
   "version": "0.4.0",
   "packages": [

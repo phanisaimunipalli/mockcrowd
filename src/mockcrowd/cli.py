@@ -25,7 +25,7 @@ def _brain_args(p: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="mockcrowd", description="Design AI populations with connected traits from real posts, and test product ideas on them.")
+    parser = argparse.ArgumentParser(prog="mockcrowd", description="Design AI population personas with connected traits from real posts, and test product ideas on them.")
     parser.add_argument("--version", action="version", version=f"mockcrowd {__version__}")
     parser.add_argument("-q", "--quiet", action="store_true", help="no progress output")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -54,7 +54,7 @@ def build_parser() -> argparse.ArgumentParser:
     v.add_argument("--json", action="store_true", help="print the report as JSON instead of markdown")
     _brain_args(v)
 
-    d = sub.add_parser("design", help="design a population of personas with connected traits, no votes")
+    d = sub.add_parser("design", help="design AI population personas with connected traits, no votes")
     d.add_argument("audience", help="who the population is: an audience, a product idea, or a question's audience")
     d.add_argument("--agents", type=int, default=100, help="population size (default 100)")
     d.add_argument("--pin", action="append", default=[], metavar="TRAIT=VALUE",

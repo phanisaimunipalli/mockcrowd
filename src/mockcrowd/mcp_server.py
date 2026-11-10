@@ -17,7 +17,7 @@ from .traits import parse_level
 from .util import set_quiet
 
 INSTRUCTIONS = (
-    "mockcrowd designs populations of personas with connected traits, grounded in real online posts, "
+    "mockcrowd designs AI population personas with connected traits, grounded in real online posts, "
     "and can simulate them reacting to a product idea. "
     "Results are a simulation: use them to rank ideas and find objections, never as proof of demand. "
     "Most trait scores are the AI's inference, so trait links partly reflect its assumptions; say so when you report them. "
@@ -96,7 +96,7 @@ async def design_personas(
     brain: str = "auto",
     model: str | None = None,
 ) -> dict[str, Any]:
-    """Design a population of personas with connected traits from real posts. No votes, no verdict.
+    """Design AI population personas with connected traits from real posts. No votes, no verdict.
 
     audience: who the population is. agents: population size, 10 to 500 (default 60).
     pins: fix traits for everyone, for example {"tech_savvy": "high", "bank_linking_comfort": 0.2}; linked traits adjust.

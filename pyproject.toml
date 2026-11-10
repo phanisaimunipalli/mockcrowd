@@ -5,12 +5,12 @@ build-backend = "hatchling.build"
 [project]
 name = "mockcrowd"
 version = "0.4.0"
-description = "An AI population designer: personas with connected traits, grounded in real posts, that can also test your product idea."
+description = "AI population personas with connected traits, grounded in real posts. Also tests your product idea."
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
 authors = [{ name = "Phani Sai Munipalli" }]
-keywords = ["personas", "persona-design", "ai-populations", "traits", "multi-agent", "simulation", "product-validation", "llm", "market-research"]
+keywords = ["personas", "persona-design", "ai-population", "traits", "multi-agent", "simulation", "product-validation", "llm", "market-research"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Environment :: Console",

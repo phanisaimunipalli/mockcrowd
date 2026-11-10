@@ -1,11 +1,11 @@
 ---
 name: mockcrowd
-description: Use when the user wants to design a population of AI personas with realistic connected traits, or to validate a product idea, test demand before building, check whether people would pay, test a price or feature, or asks "would people use this". Runs mockcrowd, which grounds personas in real Reddit, Hacker News, Bluesky and GitHub posts, and either exports the designed population or reports a demand verdict with a confidence score and the top objections.
+description: Use when the user wants to design AI population personas with realistic connected traits, or to validate a product idea, test demand before building, check whether people would pay, test a price or feature, or asks "would people use this". Runs mockcrowd, which grounds personas in real Reddit, Hacker News, Bluesky and GitHub posts, and either exports the designed population or reports a demand verdict with a confidence score and the top objections.
 ---
 
 # mockcrowd
 
-mockcrowd designs populations of AI personas whose traits connect the way real people's do, grounded in
+mockcrowd designs AI population personas whose traits connect the way real people's do, grounded in
 real posts. It can export the population, or test a product idea on it: a blind vote against a bland
 control pitch, a Reddit-style discussion, then a final vote.
 

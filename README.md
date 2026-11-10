@@ -1,10 +1,10 @@
-<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/hero.gif" alt="mockcrowd: an AI population designer. A crowd of colored dots drifts as opinions shift" width="100%"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/hero.gif" alt="mockcrowd: AI population personas. A crowd of colored dots drifts as opinions shift" width="100%"></p>
 
 [![ci](https://github.com/phanisaimunipalli/mockcrowd/actions/workflows/ci.yml/badge.svg)](https://github.com/phanisaimunipalli/mockcrowd/actions/workflows/ci.yml) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-Apache%202.0-green)
 
 <p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/debate.gif" alt="Replay of a real mockcrowd run: persona characters debate a vinyl scanning app in a chat, votes flip from Try free to Pass, ending in a weak demand verdict" width="100%"></p>
 
-**An AI population designer.** mockcrowd designs crowds of AI personas whose traits connect the way real people's do. It scores real posts on traits such as budget sensitivity, trust and how much a problem hurts, measures how those traits move together, and designs each persona to fit. Every persona cites the real posts behind it.
+**AI population personas.** mockcrowd designs crowds of AI personas whose traits connect the way real people's do. It scores real posts on traits such as budget sensitivity, trust and how much a problem hurts, measures how those traits move together, and designs each persona to fit. Every persona cites the real posts behind it.
 
 Then put the population to work: they vote blind against a bland control, argue in a simulated Reddit thread, and tell you whether your idea has demand, who would pay, and why the rest would not.
 
@@ -12,7 +12,7 @@ It runs on your machine, on the AI you already have: Claude Code, Codex, Code Pu
 
 ```bash
 pip install mockcrowd
-mockcrowd design "people who forget about their subscriptions" --pin vendor_trust=low -o crowd.json   # design a population
+mockcrowd design "people who forget about their subscriptions" --pin vendor_trust=low -o crowd.json   # design AI population personas
 mockcrowd validate "An app that finds and cancels forgotten subscriptions" --price "\$4.99/month"             # test an idea on one
 ```
 
