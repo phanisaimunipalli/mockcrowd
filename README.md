@@ -1,8 +1,6 @@
-<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/hero.gif" alt="mockcrowd: AI population personas. A crowd of colored dots drifts as opinions shift" width="100%"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/hero.gif" alt="mockcrowd: AI population personas. Real posts are scored on traits, the links between traits are measured, characters are designed from those links, and they debate an idea in groups" width="100%"></p>
 
-[![ci](https://github.com/phanisaimunipalli/mockcrowd/actions/workflows/ci.yml/badge.svg)](https://github.com/phanisaimunipalli/mockcrowd/actions/workflows/ci.yml) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-Apache%202.0-green)
-
-<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/debate.gif" alt="Replay of a real mockcrowd run: persona characters debate a vinyl scanning app in a chat, votes flip from Try free to Pass, ending in a weak demand verdict" width="100%"></p>
+[![ci](https://github.com/phanisaimunipalli/mockcrowd/actions/workflows/ci.yml/badge.svg)](https://github.com/phanisaimunipalli/mockcrowd/actions/workflows/ci.yml) [![pypi](https://img.shields.io/pypi/v/mockcrowd)](https://pypi.org/project/mockcrowd/) ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-Apache%202.0-green)
 
 **AI population personas.** mockcrowd designs crowds of AI personas whose traits connect the way real people's do. It scores real posts on traits such as budget sensitivity, trust and how much a problem hurts, measures how those traits move together, and designs each persona to fit. Every persona cites the real posts behind it.
 
@@ -13,35 +11,63 @@ It runs on your machine, on the AI you already have: Claude Code, Codex, Code Pu
 ```bash
 pip install mockcrowd
 mockcrowd design "people who forget about their subscriptions" --pin vendor_trust=low -o crowd.json   # design AI population personas
-mockcrowd validate "An app that finds and cancels forgotten subscriptions" --price "\$4.99/month"             # test an idea on one
+mockcrowd validate "An app that finds and cancels forgotten subscriptions" --price "\$4.99/month"      # test an idea on one
 ```
+
+## What a designed persona looks like
+
+One of 40 personas from a real run (a subscription cancelling idea, 130 real posts from Hacker News and Bluesky):
+
+```text
+no_robot_calls    Privacy wary skeptics    age 25-34    stance: skeptical
+Freelance copywriter and part time barista. Online a lot and wary of automation that speaks for people.
+Has a few streaming and software subscriptions and handles them herself without much drama.
+
+traits (0 to 1)
+  tech savvy 0.70            budget sensitivity 0.40        status quo attachment 0.40
+  switching cost 0.50        vendor trust 0.30              pain urgency 0.23
+  bank linking comfort 0.38  cancellation friction pain 0.20   subscription count 0.40
+
+writes: short, sardonic social post style, lowercase leaning, rhetorical questions
+built from 3 real posts (2 Bluesky, 1 Hacker News), each cited in the export
+```
+
+Later in the same run this persona told the thread: *"so an app i have to trust with my card or bank login to cancel things i could cancel myself in two minutes? and it's probably a monthly fee too. pass"*.
 
 ## How personas are designed
 
-Most persona tools invent people from a prompt, one trait at a time, so traits never relate to each other. mockcrowd measures the relations first.
+Most persona generators invent each person from a prompt, one trait at a time, so the traits never relate to each other. mockcrowd measures the relations first.
 
 1. **Score real posts.** Each post is scored from 0 to 1 on six core traits (budget sensitivity, tech savvy, status quo attachment, switching cost, vendor trust, pain urgency) and up to four traits the planner picks for your audience. Each score is marked **stated** (the post shows it) or **inferred** (the AI is estimating).
 2. **Measure the links.** How the traits move together in each segment. Small segments are pulled toward the pooled posts, so thin evidence cannot invent structure.
 3. **Sample personas from the links.** Each persona's trait profile is drawn conditional on its stance, and on any traits you pin. The links move the other traits with it.
 4. **Ground each one.** The profile is matched to the three real posts nearest to it, and the AI writes the person to fit. Each persona cites those posts.
 
-A real example: 40 personas for a subscription cancelling idea, built from 130 real posts. The strongest links in those posts were cancellation friction pain with pain urgency (+0.57), pain urgency with status quo attachment (-0.57) and cancellation friction pain with vendor trust (-0.51). Pinning a core trait such as `vendor_trust=low` shifts the traits linked to it, and the rest of the profile follows.
+In that run, the strongest links measured on the real posts included status quo attachment with pain urgency (-0.57), switching cost with status quo attachment (+0.50), budget sensitivity with pain urgency (+0.44) and budget sensitivity with tech savvy (-0.41). Pinning a core trait such as `vendor_trust=low` shifts the traits linked to it, and the rest of the profile follows.
+
+| Persona generators that invent each person | mockcrowd |
+|---|---|
+| Traits come from a prompt or a template | Traits are scored on real posts |
+| Each trait is drawn on its own | Traits are drawn from the measured links between them |
+| No record of where a persona came from | Every persona cites the real posts it was built from |
+| Hard to steer | Pin a trait for everyone and the linked traits adjust |
+| Silent about what is guesswork | Reports the share of trait scores that were stated rather than inferred |
 
 The report shows the strongest links and how closely the crowd reproduces them, next to a crowd that draws traits independently. `mockcrowd personas <run-id>` exports any run's personas with their traits and source posts.
 
 ## Test an idea on the population
 
-<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/discussion.png" alt="mockcrowd discussion: personas debate a vinyl scanning app in a simulated r/vinyl thread; would try free falls from 60% to 35%, would pay from 5% to 0%, with the top objections" width="100%"></p>
-
-<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/demo.gif" alt="Terminal recording of a real 20 persona mockcrowd run, sped up 9x, ending in a weak demand verdict" width="100%"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/debate.gif" alt="Replay of a real mockcrowd run: persona characters debate a vinyl scanning app in a chat, votes flip from Try free to Pass, ending in a weak demand verdict" width="100%"></p>
 
 A real small run (20 personas, 1 discussion round, Claude, Hacker News and Bluesky voices): alone, 60% said they would try the idea free and 5% would pay. After the discussion, 35% would try it and nobody would pay. That is the kind of answer you want before you spend a month building.
+
+<p align="center"><img src="https://raw.githubusercontent.com/phanisaimunipalli/mockcrowd/main/docs/images/demo.gif" alt="Terminal recording of a real 20 persona mockcrowd run, sped up 9x, ending in a weak demand verdict" width="100%"></p>
 
 | Problem with asking an LLM "would people buy this?" | What mockcrowd does |
 |---|---|
 | Models are agreeable and say yes to everything | Every persona also rates a **bland control pitch** in the same blind vote. The verdict is the lift over the control, not the raw yes rate. |
 | One voice, no social dynamics | A **Reddit style discussion**: threads of about 20 personas, a ranked feed, and a fixed action space (comment, reply, upvote, downvote, do nothing), following the design of [OASIS](https://github.com/camel-ai/oasis). You see the vote before and after people talk. |
-| No way to know if the tool is right | **Evals and a backtest** on products with known outcomes, plus your own recorded outcomes. |
+| No way to know if the tool is right | **Evals and a backtest** on products with known outcomes, plus your own recorded outcomes. See [docs/evals.md](https://github.com/phanisaimunipalli/mockcrowd/blob/main/docs/evals.md). |
 
 For something nobody pays for, such as an open source feature, add `--free`: the crowd is asked whether they would use it, and the verdict compares interest with a bland control. To backtest on a real feature request, add `--exclude github.com/owner/repo/issues/123` so the crowd never sees the issue it is scored against.
 
@@ -66,9 +92,7 @@ mockcrowd uses the first one it finds, or the one you pass with `--brain`.
 | `ollama` | Local models, free and private, slower | `ollama serve`, then `--model <name>` |
 | `openai` | Any OpenAI compatible endpoint (OpenAI, OpenRouter, LM Studio, vLLM) | `MOCKCROWD_API_BASE`, `MOCKCROWD_API_KEY`, `--model` |
 
-Claude has been run live end to end. The Codex, Code Puppy, Ollama and OpenAI adapters are tested against the flags and API each tool documents, but not yet in a live run; reports are welcome. Claude and Code Puppy run with tools off. Codex runs in its read only sandbox, which blocks writes but not reads, so prefer the others if your machine holds sensitive files.
-
-`--model` is passed through exactly as you write it. A 500 persona run makes roughly 100 to 150 LLM calls, because one call steps a whole batch or thread of personas. `OPENAI_API_KEY` is only used with api.openai.com; other endpoints need `MOCKCROWD_API_KEY`.
+Claude has been run live end to end. The Codex, Code Puppy, Ollama and OpenAI adapters are tested against the flags and API each tool documents, but not yet in a live run; reports are welcome. Claude and Code Puppy run with tools off. Codex runs in its read only sandbox, which blocks writes but not reads, so prefer the others if your machine holds sensitive files. `--model` is passed through exactly as you write it. A 500 persona run makes roughly 100 to 150 LLM calls. `OPENAI_API_KEY` is only used with api.openai.com; other endpoints need `MOCKCROWD_API_KEY`.
 
 ## Real voices
 
@@ -102,7 +126,7 @@ To always run the newest release without installing: `{"command": "uvx", "args":
 
 | Tool | What it does |
 |---|---|
-| `design_personas` | Designs a population with connected traits from real posts. Pin traits, get personas with traits and sources. No votes. |
+| `design_personas` | Designs AI population personas with connected traits from real posts. Pin traits, get personas with traits and sources. No votes. |
 | `validate_idea` | Runs a crowd on an idea and returns the verdict, shares, lift, confidence, top objections and the full report |
 | `get_report` | The report of a past run |
 | `list_runs` | Past runs with their verdicts |
@@ -129,7 +153,7 @@ mockcrowd outcome <run-id> --demand high|medium|low --note "what really happened
 mockcrowd eval --suite quick|full|backtest [--gate]
 ```
 
-Trait names for `--pin` are printed in the `design` output (`dims`). Runs are saved in `~/.mockcrowd/runs/<run-id>/` as `report.md` and `run.json` (every voice, persona, vote and comment). A design is printed, or written where you point `-o`; it is not saved as a run.
+Trait names for `--pin` are printed in the `design` output (`dims`). Runs are saved in `~/.mockcrowd/runs/<run-id>/` as `report.md` and `run.json` (every voice, persona, vote and comment). A design is printed, or written where you point `-o`; it is not saved as a run. `--no-live` turns off all real post collection, so use it only with `--voices`.
 
 ## How a validation run works
 
@@ -142,26 +166,7 @@ Trait names for `--pin` are printed in the `design` output (`dims`). Runs are sa
 5. **Discuss.** Threads of about 20 mixed personas, one action each per round on a ranked feed.
 6. **Final vote and report.** Shares with 95% intervals, lift over control, shift after discussion, results by segment, objection themes, trait links and a confidence score.
 
-## Evals and continuous improvement
-
-`mockcrowd eval` scores the simulator itself and appends to `~/.mockcrowd/evals/history.jsonl`. With `--gate` it exits 1 when any metric falls more than 5 points below its best.
-
-| Metric | What it checks |
-|---|---|
-| grounding, citation_valid | Personas are built from real posts, and their citations exist |
-| mix_fidelity | The crowd's stance mix matches the real posts |
-| trait_error, trait_gain, trait_spread | The crowd's trait links match the measured ones, how much closer than independent traits, and how spread out the crowd is |
-| diversity | Personas are not copies of each other |
-| control_lift, agreeableness | The crowd does not reward a bland idea |
-| persuasion_drift | How much the discussion moved the vote |
-| stability | Rerunning the vote gives the same answer |
-| realism | A judge cannot tell real posts from persona comments |
-| backtest_accuracy, backtest_auc | Known hits score above known flops |
-| leakage | How many backtest products the brain recognizes from memory |
-
-The backtest ships with 13 cases: six with record crowdfunding or user growth (for example Pebble Time, Exploding Kittens, Flow Hive) and seven well known flops (for example Juicero, Quibi, Fire Phone). Each case cites its source, and pitches are anonymized.
-
-**Your outcomes are the strongest signal.** After you test or launch, run `mockcrowd outcome <run-id> --demand ...`. The run becomes a backtest case, and future confidence scores include how well mockcrowd did on cases like yours.
+mockcrowd also scores itself: grounding, trait fidelity, agreeableness, stability and a 13 case backtest. See [docs/evals.md](https://github.com/phanisaimunipalli/mockcrowd/blob/main/docs/evals.md).
 
 ## Honest limits
 
