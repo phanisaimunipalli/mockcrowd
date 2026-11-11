@@ -173,7 +173,7 @@ mockcrowd also scores itself: grounding, trait fidelity, agreeableness, stabilit
 * It is a simulation. Use it to rank ideas, find objections and choose what to test for real, not to forecast revenue.
 * Personas reflect the people who post online, who are louder and more opinionated than most buyers. A post is not a person.
 * Most trait scores are inferred by the AI, not stated in the post, so the measured links partly reflect the AI's own assumptions. Reports print the stated share. Links are correlations, not causes. Below 8 scored posts, traits are drawn independently and the report says so.
-* Whether structured traits make verdicts more accurate is not yet measured.
+* A first test on six open source feature requests found no measurable effect of trait structure on verdicts: the difference from independent traits was about the size of run to run noise. The test was small (two cases had too little evidence), so it does not settle the question. See [docs/evals.md](https://github.com/phanisaimunipalli/mockcrowd/blob/main/docs/evals.md).
 * Backtest products are famous, so models may know how they ended. Watch the leakage metric.
 * The verdict thresholds are starting points. The backtest reports how well they separate hits from flops on your brain.
 

@@ -23,4 +23,23 @@ The backtest ships with 13 cases: six with record crowdfunding or user growth (f
 
 **Your outcomes are the strongest signal.** After you test or launch, run `mockcrowd outcome <run-id> --demand high|medium|low --note "what happened"`. The run becomes a backtest case, and future confidence scores include how well mockcrowd did on cases like yours.
 
-Trait structure and verdict accuracy: whether structured traits make verdicts more accurate is not yet measured. The trait metrics above check that the crowd reproduces the measured links, not that the links improve predictions.
+## Does trait structure improve verdicts? A first test
+
+The trait metrics above check that the crowd reproduces the measured links, not that the links improve predictions. To test that, six real open source feature requests (Ollama reranking, smolagents async, datasets cloud paths, Hub RSS, two Gradio requests) were run in `--free` mode with 40 personas, in three arms on identical evidence (same plan, same scored posts, via `--reuse-run`):
+
+* **A:** traits drawn from the measured links
+* **B:** traits drawn independently (`--independent-traits`)
+* **A2:** a second run of A, to measure run to run noise
+
+| Measure | Result |
+|---|---|
+| Mean change in interest, A vs B | 0.039 |
+| Mean change in interest, A vs A2 (noise) | 0.032 |
+| Mean change in lift, A vs B | 0.094 |
+| Mean change in lift, A vs A2 (noise) | 0.046 |
+| Same verdict as A | B: 5 of 6, A2: 5 of 6 |
+| Rank correlation of interest with real reactions | A 0.35, B 0.64, A2 0.35 |
+
+**Reading it.** Changing from linked to independent traits moved results about as much as rerunning the same arm, and the identical arms A and A2 differ as much on rank correlation as A and B do. This test cannot detect an effect of that size. It does not show that structure helps or hurts.
+
+**Limits.** Six cases, one run per arm. Two Gradio cases kept only 1 and 7 relevant posts (the GitHub search is not limited to the project's repo, so it returned unrelated issues), so those cases barely tested traits. A repeat needs more cases, repeated runs per arm, and project scoped GitHub search.

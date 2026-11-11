@@ -306,6 +306,13 @@ def _error(a: list[list[float]], b: list[list[float]]) -> float:
     return sum(cells) / len(cells) if cells else 0.0
 
 
+def independent(model: dict[str, Any]) -> dict[str, Any]:
+    """The same model with every trait link removed: same spread and stance mix, traits drawn on their own."""
+    k = len(model["dims"])
+    return {**model, "segments": {s: {**v, "corr": identity(k)} for s, v in model["segments"].items()},
+            "pooled": {**model["pooled"], "corr": identity(k)}}
+
+
 def fidelity(personas: list[Any], model: dict[str, Any], seed: int = 0, min_group: int = 15) -> dict[str, float] | None:
     """How closely the crowd's trait correlations match the measured ones, against a crowd with independent traits.
 
@@ -314,8 +321,7 @@ def fidelity(personas: list[Any], model: dict[str, Any], seed: int = 0, min_grou
         return None
     ds = model["dims"]
     k = len(ds)
-    flat = {**model, "segments": {s: {**v, "corr": identity(k)} for s, v in model["segments"].items()},
-            "pooled": {**model["pooled"], "corr": identity(k)}}
+    flat = independent(model)
     got = base = weight = 0.0
     spread_rows: list[list[float]] = []
     for seg in model["segments"]:

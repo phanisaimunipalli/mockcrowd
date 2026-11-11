@@ -44,6 +44,9 @@ def build_parser() -> argparse.ArgumentParser:
     v.add_argument("--exclude", action="append", default=[],
                    help="skip real posts whose link contains this text, for fair backtests (repeatable)")
     v.add_argument("--voices", action="append", default=[], help="JSONL, CSV or text file of real posts (repeatable)")
+    v.add_argument("--reuse-run", metavar="RUN_ID", help="reuse a saved run's plan and scored posts (same evidence, for A/B tests)")
+    v.add_argument("--independent-traits", action="store_true",
+                   help="draw traits on their own instead of from the measured links (for A/B tests)")
     v.add_argument("--community", help='where the discussion is set, for example "r/vinyl"')
     v.add_argument("--question", action="append", default=[],
                    help='extra typed question, kind:key:text[:opt1|opt2], for example "choice:first:Which first?:scan|alerts"')
@@ -115,7 +118,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
         price=args.price, free=args.free, audience=args.audience, community=args.community,
         sources=[] if args.no_live else (args.sources or list(DEFAULT_SOURCES)),
         voice_files=args.voices, exclude=args.exclude, questions=[parse_question(q) for q in args.question],
-        control=not args.no_control,
+        control=not args.no_control, reuse_run=args.reuse_run, independent_traits=args.independent_traits,
     )
     run = validate(args.idea, brain, cfg, out_dir=Path(args.out) if args.out else None)
     print(json.dumps(run["report"], indent=2) if args.json else render_markdown(run))

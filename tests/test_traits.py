@@ -126,3 +126,15 @@ def test_design_command_exports_personas_without_votes(voices_file, tmp_path, ca
     assert data["links"] and out.stat().st_mode & 0o777 == 0o600
     assert not store.list_runs()  # a design is not a run
     assert main(["-q", "design", "x", "--brain", "mock", "--no-live", "--voices", str(voices_file), "--pin", "nope=low"]) == 2
+
+
+def test_reuse_run_and_independent_traits(voices_file):
+    first = validate("A vinyl catalog app", get_brain("mock"), Config(agents=60, rounds=1, sources=[], voice_files=[str(voices_file)]))
+    again = validate("A vinyl catalog app", get_brain("mock"), Config(agents=60, rounds=1, reuse_run=first["id"], independent_traits=True))
+    assert again["plan"] == first["plan"] and [v["id"] for v in again["voices"]] == [v["id"] for v in first["voices"]]
+    assert again["voices"][0]["labels"] == first["voices"][0]["labels"]  # same scored evidence, not relabeled
+    ds = first["trait_model"]["dims"]
+    rows = [[p["traits"].get(d) for d in ds if d != "stance"] for p in again["personas"]]
+    assert T.structure(first["trait_model"]) > 0.3
+    assert abs(T.pearson([r[0] for r in rows], [r[1] for r in rows])) < 0.45  # links are gone
+    assert again["report"]["traits"]["trait_error"] <= 0.3

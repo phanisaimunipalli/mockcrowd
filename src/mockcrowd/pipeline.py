@@ -33,6 +33,8 @@ class Config:
     sources: list[str] = field(default_factory=lambda: list(DEFAULT_SOURCES))
     voice_files: list[str] = field(default_factory=list)
     exclude: list[str] = field(default_factory=list)  # drop real posts whose link or id contains these
+    reuse_run: str | None = None  # reuse a saved run's plan and scored posts, to compare settings on identical evidence
+    independent_traits: bool = False  # draw traits on their own instead of from the measured links (for A/B tests)
     questions: list[S.Question] = field(default_factory=list)
     control: bool = True
     max_voices: int = 600
@@ -45,6 +47,10 @@ def latest_backtest_accuracy() -> float | None:
 
 def _ground(idea: str, brain: Brain, cfg: Config, total: int) -> tuple[dict[str, Any], list[Voice], list[str]]:
     """Plan the audience, collect real posts, and score them. Shared by validate and design."""
+    if cfg.reuse_run:
+        saved = store.load_run(cfg.reuse_run)
+        log(f"reusing the plan and {len(saved['voices'])} scored posts of run {saved['id']}")
+        return saved["plan"], [Voice.from_dict(v) for v in saved["voices"]], []
     log(f"1/{total} planning the audience")
     plan = P.plan_audience(brain, idea, cfg.audience)
 
@@ -95,6 +101,8 @@ def validate(idea: str, brain: Brain, cfg: Config, out_dir: Path | None = None, 
 
     log("3/6 designing personas")
     trait_model = T.measure(voices, plan)
+    if cfg.independent_traits:
+        trait_model = T.independent(trait_model)
     crowd = P.design_personas(brain, idea, plan, voices, cfg.agents, cfg.batch_size, cfg.workers, cfg.seed, trait_model)
     fit = T.fidelity(crowd, trait_model, cfg.seed)
     if trait_model["structured"]:
