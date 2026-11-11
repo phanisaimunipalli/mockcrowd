@@ -48,3 +48,22 @@ def test_exclude_drops_matching_real_posts(voices_file):
     run = validate("idea", MockBrain(), Config(agents=10, rounds=1, sources=[], voice_files=[str(voices_file)],
                                                exclude=[":0", ":1"]), save=False)
     assert all(not v["id"].endswith((":0", ":1")) for v in run["voices"])
+
+
+def test_github_search_is_scoped_to_the_named_repo(monkeypatch):
+    queries = []
+    monkeypatch.setattr(github, "http_json", lambda url, headers=None, params=None: queries.append((params or {}).get("q")) or {"items": []})
+    github.search("dark mode", repo="gradio-app/gradio")
+    github.search("dark mode", repo="x repo:evil/other is:pr")  # not an owner/name, so it is dropped
+    assert queries == ["dark mode repo:gradio-app/gradio is:issue", "dark mode is:issue"]
+    assert github.is_repo("gradio-app/gradio") and not github.is_repo("gradio") and not github.is_repo(None)
+
+
+def test_collect_voices_scopes_github_queries_to_planned_repos(monkeypatch):
+    from mockcrowd import personas as P
+
+    seen = []
+    monkeypatch.setattr(P.github, "search", lambda q, repo=None: seen.append((q, repo)) or [])
+    plan = {"github_queries": ["dark mode"], "github_repos": ["gradio-app/gradio", "bad repo"]}
+    P.collect_voices(plan, ["github"])
+    assert seen == [("dark mode", "gradio-app/gradio")]

@@ -74,12 +74,16 @@ Return JSON:
   "search_queries": ["2 to 5 word queries real users would write about this problem"],
   "hn_queries": ["queries for Hacker News comments"],
   "github_queries": ["GitHub issue search queries, ONLY if the audience is software developers, else empty"],
+  "github_repos": ["owner/name of the GitHub repo the idea is a change to, ONLY if it names an existing project, else empty"],
   "appstore_terms": ["names or terms of the closest existing apps"],
   "trait_dims": [{{"name": "short snake_case name", "description": "what 0 and 1 mean"}}]}}
 
 Use 3 to 6 segments, including people who would NOT buy (for example happy with the status quo).
 Use 3 to 6 real, active subreddits, 4 to 8 search queries, 2 to 3 hn_queries, 2 to 3 appstore_terms,
 and 0 to 2 github_queries (short keyword queries, for example "rerank model support").
+When the idea is a feature or change for a named open source project, put its repo in github_repos (for example
+"gradio-app/gradio") and keep the queries about the feature only. Without a named project, put the project or product
+name inside each github_query so results are not about unrelated repos.
 trait_dims: 0 to 4 traits that matter for THIS audience and are not generic (generic ones such as budget
 sensitivity, tech savvy and trust are already measured), for example "collection_size" for record collectors."""
 
@@ -96,6 +100,7 @@ sensitivity, tech savvy and trust are already measured), for example "collection
             "search_queries": [" ".join(words)],
             "hn_queries": [" ".join(words)],
             "github_queries": [],
+            "github_repos": [],
             "appstore_terms": [words[0]],
             "trait_dims": [{"name": "engagement", "description": "0 is a bystander, 1 is a daily user"}],
         }
@@ -129,8 +134,10 @@ def collect_voices(
         for q in queries[:4]:
             jobs.append((f"bluesky '{q}'", lambda q=q: bluesky.search(q)))
     if "github" in sources:
+        repos = [r for r in plan.get("github_repos", []) if github.is_repo(r)][:2]
         for q in plan.get("github_queries", [])[:2]:
-            jobs.append((f"github '{q}'", lambda q=q: github.search(q)))
+            for repo in repos or [None]:  # scoped to the named project, so results are about it
+                jobs.append((f"github '{q}'" + (f" in {repo}" if repo else ""), lambda q=q, repo=repo: github.search(q, repo=repo)))
     if "appstore" in sources:
         for term in plan.get("appstore_terms", [])[:3]:
             jobs.append((f"appstore '{term}'", lambda t=term: appstore.search(t)))

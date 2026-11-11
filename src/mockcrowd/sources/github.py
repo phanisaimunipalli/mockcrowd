@@ -6,6 +6,7 @@ Set GITHUB_TOKEN (or GH_TOKEN) to raise the search rate limit from 10 to 30 requ
 from __future__ import annotations
 
 import os
+import re
 
 from ..util import http_json, log
 from . import Voice, clean_text
@@ -21,11 +22,17 @@ def _headers() -> dict[str, str]:
     return headers
 
 
-def search(query: str, issues: int = 8, threads: int = 3, comments: int = 10) -> list[Voice]:
-    """Most-reacted issues for a query, plus top comments from the busiest few."""
+def is_repo(name: object) -> bool:
+    """True for an owner/name string, so a planner reply can never inject other search qualifiers."""
+    return isinstance(name, str) and re.fullmatch(r"[\w.-]+/[\w.-]+", name) is not None
+
+
+def search(query: str, issues: int = 8, threads: int = 3, comments: int = 10, repo: str | None = None) -> list[Voice]:
+    """Most-reacted issues for a query (in one repo when given), plus top comments from the busiest few."""
     headers = _headers()
+    scope = f" repo:{repo}" if repo and is_repo(repo) else ""
     found = http_json(f"{API}/search/issues", headers=headers,
-                      params={"q": f"{query} is:issue", "sort": "reactions", "order": "desc", "per_page": issues})
+                      params={"q": f"{query}{scope} is:issue", "sort": "reactions", "order": "desc", "per_page": issues})
     voices: list[Voice] = []
     items = [i for i in found.get("items", []) if isinstance(i, dict)]
     for item in items:
