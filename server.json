@@ -4,12 +4,12 @@
   "title": "mockcrowd",
   "description": "AI population personas with connected traits, grounded in real posts. Also tests ideas.",
   "repository": {"url": "https://github.com/phanisaimunipalli/mockcrowd", "source": "github"},
-  "version": "0.4.0",
+  "version": "0.4.1",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "mockcrowd",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "runtimeHint": "uvx",
       "runtimeArguments": [{"type": "named", "name": "--with", "value": "mcp>=2,<3"}],
       "packageArguments": [{"type": "positional", "value": "mcp"}],
