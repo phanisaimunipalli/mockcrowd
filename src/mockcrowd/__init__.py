@@ -1,3 +1,3 @@
 """mockcrowd: validate a product idea with a crowd of grounded AI personas."""
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
